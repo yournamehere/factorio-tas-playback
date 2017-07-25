@@ -4,9 +4,8 @@ local debugmode = commandqueue.settings.debugmode
 local allowspeed = commandqueue.settings.allowspeed
 
 local myplayer = nil
-local curtick = 0
-local walkstate = {walking = false}
-local minestate = nil
+global.walkstate = {walking = false}
+global.minestate = nil
 
 local directions = {}
 directions["STOP"] = {walking = false}
@@ -28,18 +27,18 @@ function inrange(position)
 end
 
 function debugprint(msg)
-  if debugmode then myplayer.print("[" .. curtick .. "] " .. msg) end
+  if debugmode then myplayer.print("[" .. game.tick .. "] " .. msg) end
 end
 
 function errprint(msg)
-  myplayer.print("[" .. curtick .. "]  ___WARNING___ " .. msg)
+  myplayer.print("[" .. game.tick .. "]  ___WARNING___ " .. msg)
 end
 
 local commands = {}
 
 commands["move"] = function (tokens)
   debugprint("Moving: " .. tokens[2])
-  walkstate = directions[tokens[2]]
+  global.walkstate = directions[tokens[2]]
   if tokens[2] == "STOP" then
     debugprint("Stopped at: (" .. myplayer.position.x .. "," .. myplayer.position.y .. ")")
   end
@@ -65,8 +64,8 @@ commands["mine"] = function (tokens)
     end
   end
 
-  if not position or hasdecimals then minestate = position
-  else minestate = {position[1] + 0.5, position[2] + 0.5} end
+  if not position or hasdecimals then global.minestate = position
+  else global.minestate = {position[1] + 0.5, position[2] + 0.5} end
 
   if position then
     if hasdecimals then debugprint("Mining: Coordinates (" .. position[1] .. "," .. position[2] .. ")")
@@ -85,6 +84,7 @@ commands["build"] = function (tokens)
     errprint("Build failed: No item available")
     return
   end
+
   -- Check if we are in reach of this tile
   if not inrange(position) then 
     errprint("Build failed: You are trying to place beyond realistic reach")
@@ -144,7 +144,9 @@ commands["put"] = function (tokens)
 
   myplayer.remove_item{name=item, count = inserted}
 
-  if inserted < amount then errorprint("Put sub-optimal: Only put " .. amt .. " at {" .. position[1] .. "," .. position[2] .. "}.") end
+  if inserted < amount then
+    errprint("Put sub-optimal: Only put " .. amt .. " at {" .. position[1] .. "," .. position[2] .. "}.")
+  end
   debugprint("Put " .. amount .. "x " .. item .. " into " .. myplayer.selected.name  .. " at {" .. position[1] .. "," .. position[2] .. "}.")
 end
 
@@ -159,20 +161,22 @@ commands["take"] = function (tokens)
   local amount = tokens[4]
   local slot = tokens[5]
   myplayer.update_selected_entity(position)
+
   if not myplayer.selected then
-    errorprint("Take failed: No object at position {" .. position[1] .. "," .. position[2] .. "}.")
+    errprint("Take failed: No object at position {" .. position[1] .. "," .. position[2] .. "}.")
     return
   end
+
   -- Check if we are in reach of this tile
   if not inrange(position) then
-    errorprint("Take failed: You are trying to reach too far.")
+    errprint("Take failed: You are trying to reach too far.")
     return
   end
 
   local otherinv = myplayer.selected.get_inventory(slot)
 
   if not otherinv then
-     errorprint("Take failed: Unable to access inventories")
+     errprint("Take failed: Unable to access inventories")
     return
   end
 
@@ -183,7 +187,7 @@ commands["take"] = function (tokens)
   end
 
   if amountintarget == 0 then
-    errorprint("Take failed: No items at {" .. position[1] .. "," .. position[2] .. "}.")
+    errprint("Take failed: No items at {" .. position[1] .. "," .. position[2] .. "}.")
     return
   end
 
@@ -191,7 +195,7 @@ commands["take"] = function (tokens)
   debugprint("Took " .. taken .. "x " .. item .. " from " .. myplayer.selected.name  .. " at {" .. position[1] .. "," .. position[2] .. "}.")
 
   if taken == 0 then
-    errorprint("Take failed: No space at {" .. position[1] .. "," .. position[2] .. "}.")
+    errprint("Take failed: No space at {" .. position[1] .. "," .. position[2] .. "}.")
     return
   end
 
@@ -233,22 +237,23 @@ commands["rotate"] = function (tokens)
 end
 
 script.on_event(defines.events.on_tick, function(event)
-  curtick = curtick + 1
-  if commandqueue[curtick] then
-    for k,v in pairs(commandqueue[curtick]) do
+  if not myplayer then myplayer = global.myplayer end
+  if commandqueue[game.tick] then
+    for k,v in pairs(commandqueue[game.tick]) do
       commands[v[1]](v)
     end
   end
-  myplayer.walking_state = walkstate
-  if not minestate then myplayer.mining_state = {mining = false}
+  myplayer.walking_state = global.walkstate
+  if not global.minestate then myplayer.mining_state = {mining = false}
   else
-    myplayer.update_selected_entity(minestate)
-    myplayer.mining_state = {mining = true, position = minestate}
+    myplayer.update_selected_entity(global.minestate)
+    myplayer.mining_state = {mining = true, position = global.minestate}
   end
 end)
 
 script.on_event(defines.events.on_player_created, function(event)
   myplayer = game.players[event.player_index]
+  global.myplayer = myplayer
   game.surfaces[1].always_day = true
   myplayer.game_view_settings.update_entity_selection = false
   myplayer.insert{name="iron-plate", count=8}
