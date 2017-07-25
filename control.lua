@@ -256,17 +256,5 @@ script.on_event(defines.events.on_player_created, function(event)
   global.myplayer = myplayer
   game.surfaces[1].always_day = true
   myplayer.game_view_settings.update_entity_selection = false
-  myplayer.insert{name="iron-plate", count=8}
-  myplayer.insert{name="pistol", count=1}
-  myplayer.insert{name="firearm-magazine", count=10}
-  myplayer.insert{name="burner-mining-drill", count = 1}
-  myplayer.insert{name="stone-furnace", count = 1}
   myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
 end)
-
--- script.on_init( function(event)
---   myplayer = game.players[1]
---   game.surfaces[1].always_day = true
---   myplayer.game_view_settings.update_entity_selection = false
---   myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
--- end)
