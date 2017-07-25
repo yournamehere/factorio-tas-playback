@@ -104,28 +104,44 @@ commands["build"] = function (tokens)
 end
 
 commands["put"] = function (tokens)
-  myplayer.update_selected_entity(tokens[2])
-  debugprint("Put " .. tokens[4] .. "x " .. tokens[3] .. " into " .. myplayer.selected.name  .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.")
-  if myplayer.selected then
-    -- Check if we are in reach of this tile
-    local inrange = ((tokens[2][1]-myplayer.position.x)^2+(tokens[2][2]-myplayer.position.y)^2) < 36
-    if not inrange then
-      errorprint("Put failed: You are trying to reach too far.")
-    else
-      local avail = myplayer.get_item_count(tokens[3])
-      local amt = tokens[4]
-      local otherinv = myplayer.selected.get_inventory(tokens[5])
+  local position = tokens[2]
+  local item = tokens[3]
+  local amount = tokens[4]
+  local slot = tokens[5]
 
-      if avail < amt then amt = avail end
-      if avail > 0 then
-        local amt = otherinv.insert{name=tokens[3], count=amt}
-        if amt > 0 then
-          myplayer.remove_item{name=tokens[3], count=amt}
-          if amt < tokens[4] then errorprint("Put sub-optimal: Only put " .. amt .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-        else errorprint("Put failed: No space at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-      else errorprint("Put failed: No items") end
-    end
-  else errorprint("Put failed: No object at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
+  myplayer.update_selected_entity(position)
+
+  if not myplayer.selected then
+    errprint("Put failed: No object at position {" .. position[1] .. "," .. position[2] .. "}.")
+    return
+  end
+
+  if not inrange(position) then
+    errprint("Put failed: You are trying to reach too far.")
+    return
+  end
+
+  local amountininventory = myplayer.get_item_count(item)
+  local otherinv = myplayer.selected.get_inventory(slot)
+  local toinsert = math.min(amountininventory, amount)
+
+  if toinsert == 0 then
+    errprint("Put failed: No items")
+    return
+  end
+
+  local inserted = otherinv.insert{name=item, count=toinsert}
+
+  --if we already failed for trying to insert no items, then if no items were inserted, it must be because it is full
+  if inserted == 0 then
+    errprint("Put failed: No space at {" .. position[1] .. "," .. position[2] .. "}.")
+    return
+  end
+
+  myplayer.remove_item{name=item, count = inserted}
+
+  if inserted < amount then errorprint("Put sub-optimal: Only put " .. amt .. " at {" .. position[1] .. "," .. position[2] .. "}.") end
+  debugprint("Put " .. amount .. "x " .. item .. " into " .. myplayer.selected.name  .. " at {" .. position[1] .. "," .. position[2] .. "}.")
 end
 
 commands["speed"] = function (tokens)
