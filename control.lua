@@ -23,6 +23,10 @@ function roundn(x)
   return x + 0.5 - (x + 0.5) % 1
 end
 
+function inrange(position)
+  return ((position[1]-myplayer.position.x)^2+(position[2]-myplayer.position.y)^2) < 36
+end
+
 function debugprint(msg)
   if debugmode then myplayer.print("[" .. curtick .. "] " .. msg) end
 end
@@ -67,25 +71,36 @@ commands["mine"] = function (tokens)
 end
 
 commands["build"] = function (tokens)
-  debugprint("Building: " .. tokens[2] .. " on tile (" .. tokens[3][1] .. "," .. tokens[3][2] .. ")")
+  local item = tokens[2]
+  local position = tokens[3]
+  local direction = tokens[4]
+  debugprint("Building: " .. item .. " on tile (" .. position[1] .. "," .. position[2] .. ")")
+
   -- Check if we have the item
-  local have = myplayer.get_item_count(tokens[2])
-  -- Check if we are in reach of this tile
-  local inrange = ((tokens[3][1]-myplayer.position.x)^2+(tokens[3][2]-myplayer.position.y)^2) < 36
-  -- Check if we can actually place the item at this tile
-  local canplace = myplayer.surface.can_place_entity{name = tokens[2], position = {tokens[3][1],tokens[3][2]}, force = "player"}
-  -- Error messages if relevant
-  if have == 0 then errprint("Build failed: No item available")
-    elseif not inrange then errprint("Build failed: You are trying to place beyond realistic reach")
-      elseif not canplace then errprint("Build failed: Something is in the way")
-  -- If no errors, proceed to actually building things
-  else
-  -- Place the item
-  asm = myplayer.surface.create_entity{name = tokens[2], position = {tokens[3][1], tokens[3][2]}, direction = tokens[4], force="player"}
-  -- Remove the placed item from the player (since he has now spent it)
-  if asm then myplayer.remove_item({name = tokens[2], count = 1})
-    else errprint("Build failed: Reason unknown.") end
+  if myplayer.get_item_count(item) == 0 then 
+    errprint("Build failed: No item available")
+    return
   end
+  -- Check if we are in reach of this tile
+  if not inrange(position) then 
+    errprint("Build failed: You are trying to place beyond realistic reach")
+    return
+  end
+  
+  -- Check if we can actually place the item at this tile
+  local canplace = myplayer.surface.can_place_entity{name = item, position = position, force = "player"}  
+  if not canplace then 
+    errprint("Build failed: Something is in the way")
+    return
+  end
+  
+  -- If no errors, proceed to actually building things
+  -- Place the item
+  asm = myplayer.surface.create_entity{name = item, position = position, direction = direction, force="player"}
+  -- Remove the placed item from the player (since he has now spent it)
+  if asm then myplayer.remove_item({name = item, count = 1})
+    else errprint("Build failed: Reason unknown.") end
+  
 end
 
 commands["put"] = function (tokens)
