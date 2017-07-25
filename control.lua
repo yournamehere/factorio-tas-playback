@@ -30,6 +30,7 @@ end
 function debugprint(msg)
   if debugmode then myplayer.print("[" .. curtick .. "] " .. msg) end
 end
+
 function errprint(msg)
   myplayer.print("[" .. curtick .. "]  ___WARNING___ " .. msg)
 end
@@ -39,7 +40,9 @@ local commands = {}
 commands["move"] = function (tokens)
   debugprint("Moving: " .. tokens[2])
   walkstate = directions[tokens[2]]
-  if tokens[2] == "STOP" then debugprint("Stopped at: (" .. myplayer.position.x .. "," .. myplayer.position.y .. ")") end
+  if tokens[2] == "STOP" then
+    debugprint("Stopped at: (" .. myplayer.position.x .. "," .. myplayer.position.y .. ")")
+  end
 end
 
 commands["craft"] = function (tokens)
@@ -53,20 +56,21 @@ commands["stopcraft"] = function (tokens)
 end
 
 commands["mine"] = function (tokens)
-  if tokens[2] then
-    if tokens[2][1] ~= roundn(tokens[2][1]) or tokens[2][2] ~= roundn(tokens[2][2]) then
+  local position = tokens[2]
+  if position then
+    if position[1] ~= roundn(position[1]) or position[2] ~= roundn(position[2]) then
       hasdecimals = true
     else
       hasdecimals = false
     end
   end
 
-  if not tokens[2] or hasdecimals then minestate = tokens[2]
-  else minestate = {tokens[2][1] + 0.5, tokens[2][2] + 0.5} end
-    
-  if tokens[2] then
-    if hasdecimals then debugprint("Mining: Coordinates (" .. tokens[2][1] .. "," .. tokens[2][2] .. ")")
-    else debugprint("Mining: Tile (" .. tokens[2][1] .. "," .. tokens[2][2] .. ")") end
+  if not position or hasdecimals then minestate = position
+  else minestate = {position[1] + 0.5, position[2] + 0.5} end
+
+  if position then
+    if hasdecimals then debugprint("Mining: Coordinates (" .. position[1] .. "," .. position[2] .. ")")
+    else debugprint("Mining: Tile (" .. position[1] .. "," .. position[2] .. ")") end
   else debugprint("Mining: STOP") end
 end
 
@@ -215,11 +219,17 @@ commands["recipe"] = function (tokens)
 end
 
 commands["rotate"] = function (tokens)
-  myplayer.update_selected_entity(tokens[2])
-  if myplayer.selected then
-    myplayer.selected.direction = directions[tokens[3]]
+  local position = tokens[2]
+  local direction = tokens[3]
+
+  myplayer.update_selected_entity(position)
+  
+  if not myplayer.selected then
+    errorprint ("Rotate failed, no object at position {" .. position[1] .. "," .. position[2] .. "}")
   end
-  debugprint("Rotating " .. myplayer.selected.name  .. " so that it faces " .. tokens[3] .. ".")
+  
+  myplayer.selected.direction = directions[direction]
+  debugprint("Rotating " .. myplayer.selected.name  .. " so that it faces " .. direction .. ".")
 end
 
 script.on_event(defines.events.on_tick, function(event)
