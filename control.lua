@@ -229,7 +229,7 @@ commands["rotate"] = function (tokens)
   myplayer.update_selected_entity(position)
   
   if not myplayer.selected then
-    errorprint ("Rotate failed, no object at position {" .. position[1] .. "," .. position[2] .. "}")
+    errprint ("Rotate failed, no object at position {" .. position[1] .. "," .. position[2] .. "}")
   end
   
   myplayer.selected.direction = directions[direction]
