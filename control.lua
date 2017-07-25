@@ -150,31 +150,53 @@ commands["speed"] = function (tokens)
 end
 
 commands["take"] = function (tokens)
-  myplayer.update_selected_entity(tokens[2])
-  if myplayer.selected then
-    -- Check if we are in reach of this tile
-    local inrange = ((tokens[2][1]-myplayer.position.x)^2+(tokens[2][2]-myplayer.position.y)^2) < 36
-    if not inrange then
-      errorprint("Take failed: You are trying to reach too far.")
-    else
-      local otherinv = myplayer.selected.get_inventory(tokens[5])
+  local position = tokens[2]
+  local item = tokens[3]
+  local amount = tokens[4]
+  local slot = tokens[5]
+  myplayer.update_selected_entity(position)
+  if not myplayer.selected then
+    errorprint("Take failed: No object at position {" .. position[1] .. "," .. position[2] .. "}.")
+    return
+  end
+  -- Check if we are in reach of this tile
+  if not inrange(position) then
+    errorprint("Take failed: You are trying to reach too far.")
+    return
+  end
 
-      if otherinv then
-        local amt = tokens[4]
-        local avail = otherinv.get_item_count(tokens[3])
-        if amt == "all" then amt = avail
-        elseif avail < amt then amt = avail end
-        if avail > 0 then
-          local amt = myplayer.insert{name=tokens[3], count=amt}
-          if debugmode then myplayer.print("[" .. curtick .. "] Took " .. amt .. "x " .. tokens[3] .. " from " .. myplayer.selected.name  .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-          if amt > 0 then
-            otherinv.remove{name=tokens[3], count=amt}
-            if tokens[4] ~= "all" and amt < tokens[4] then myplayer.print("[" .. curtick .. "] Take sub-optimal: Only took " .. amt .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-          else errorprint("Take failed: No space at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-        else errorprint("Take failed: No items at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-      else errorprint("Take failed: Unable to access inventories") end
-    end
-  else errorprint("Take failed: No object at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
+  local otherinv = myplayer.selected.get_inventory(slot)
+
+  if not otherinv then
+     errorprint("Take failed: Unable to access inventories")
+    return
+  end
+
+  local totake = amount
+  local amountintarget = otherinv.get_item_count(item)
+  if totake == "all" then totake = amountintarget
+  else totake = math.min(amountintarget, amount)
+  end
+
+  if amountintarget == 0 then
+    errorprint("Take failed: No items at {" .. position[1] .. "," .. position[2] .. "}.")
+    return
+  end
+
+  local taken = myplayer.insert{name=item, count=totake}
+  debugprint("Took " .. taken .. "x " .. item .. " from " .. myplayer.selected.name  .. " at {" .. position[1] .. "," .. position[2] .. "}.")
+
+  if taken == 0 then
+    errorprint("Take failed: No space at {" .. position[1] .. "," .. position[2] .. "}.")
+    return
+  end
+
+  otherinv.remove{name=item, count=taken}
+
+  if amount ~= "all" and taken < amount then
+    errprint("Take sub-optimal: Only took " .. taken .. " at {" .. position[1] .. "," .. position[2] .. "}.")
+  end
+
 end
 
 commands["tech"] = function (tokens)
