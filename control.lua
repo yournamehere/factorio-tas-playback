@@ -24,159 +24,156 @@ function roundn(x)
 end
 
 function debugprint(msg)
-  if debugmode then myplayer.print(msg) end
+  if debugmode then myplayer.print("[" .. curtick .. "] " .. msg) end
+end
+function errprint(msg)
+  myplayer.print("[" .. curtick .. "]  ___WARNING___ " .. msg)
 end
 
-commands = {}
+local commands = {}
+
 commands["move"] = function (tokens)
-  debugprint("[" .. curtick .. "] Moving: " .. tokens[2])
+  debugprint("Moving: " .. tokens[2])
   walkstate = directions[tokens[2]]
   if tokens[2] == "STOP" then debugprint("Stopped at: (" .. myplayer.position.x .. "," .. myplayer.position.y .. ")") end
 end
 
 commands["craft"] = function (tokens)
+  myplayer.begin_crafting{recipe = tokens[2], count = tokens[3] or 1}
+  debugprint("Crafting: " .. tokens[2] .. " x" .. (tokens[3] or 1))
+end
+
+commands["stopcraft"] = function (tokens)
+  myplayer.cancel_crafting{index = tokens[2], count = tokens[3] or 1}
+  debugprint("Craft abort: Index " .. tokens[2] .. " x" .. (tokens[3] or 1))
 end
 
 commands["mine"] = function (tokens)
-if tokens[2] then
-  if tokens[2][1] ~= roundn(tokens[2][1]) or tokens[2][2] ~= roundn(tokens[2][2]) then
-    hasdecimals = true
+  if tokens[2] then
+    if tokens[2][1] ~= roundn(tokens[2][1]) or tokens[2][2] ~= roundn(tokens[2][2]) then
+      hasdecimals = true
+    else
+      hasdecimals = false
+    end
+  end
+
+  if not tokens[2] or hasdecimals then minestate = tokens[2]
+  else minestate = {tokens[2][1] + 0.5, tokens[2][2] + 0.5} end
+    
+  if tokens[2] then
+    if hasdecimals then debugprint("Mining: Coordinates (" .. tokens[2][1] .. "," .. tokens[2][2] .. ")")
+    else debugprint("Mining: Tile (" .. tokens[2][1] .. "," .. tokens[2][2] .. ")") end
+  else debugprint("Mining: STOP") end
+end
+
+commands["build"] = function (tokens)
+  debugprint("Building: " .. tokens[2] .. " on tile (" .. tokens[3][1] .. "," .. tokens[3][2] .. ")")
+  -- Check if we have the item
+  local have = myplayer.get_item_count(tokens[2])
+  -- Check if we are in reach of this tile
+  local inrange = ((tokens[3][1]-myplayer.position.x)^2+(tokens[3][2]-myplayer.position.y)^2) < 36
+  -- Check if we can actually place the item at this tile
+  local canplace = myplayer.surface.can_place_entity{name = tokens[2], position = {tokens[3][1],tokens[3][2]}, force = "player"}
+  -- Error messages if relevant
+  if have == 0 then errprint("Build failed: No item available")
+    elseif not inrange then errprint("Build failed: You are trying to place beyond realistic reach")
+      elseif not canplace then errprint("Build failed: Something is in the way")
+  -- If no errors, proceed to actually building things
   else
-    hasdecimals = false
+  -- Place the item
+  asm = myplayer.surface.create_entity{name = tokens[2], position = {tokens[3][1], tokens[3][2]}, direction = tokens[4], force="player"}
+  -- Remove the placed item from the player (since he has now spent it)
+  if asm then myplayer.remove_item({name = tokens[2], count = 1})
+    else errprint("Build failed: Reason unknown.") end
   end
 end
 
-if not tokens[2] or hasdecimals then minestate = tokens[2]
-else minestate = {tokens[2][1] + 0.5, tokens[2][2] + 0.5} end
-  
-if tokens[2] then
-  if hasdecimals then debugprint("[" .. curtick .. "] Mining: Coordinates (" .. tokens[2][1] .. "," .. tokens[2][2] .. ")")
-  else debugprint("[" .. curtick .. "] Mining: Tile (" .. tokens[2][1] .. "," .. tokens[2][2] .. ")") end
-else debugprint("[" .. curtick .. "] Mining: STOP") end
-
-end
-commands["build"] = function (tokens)
-end
 commands["put"] = function (tokens)
+  myplayer.update_selected_entity(tokens[2])
+  debugprint("Put " .. tokens[4] .. "x " .. tokens[3] .. " into " .. myplayer.selected.name  .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.")
+  if myplayer.selected then
+    -- Check if we are in reach of this tile
+    local inrange = ((tokens[2][1]-myplayer.position.x)^2+(tokens[2][2]-myplayer.position.y)^2) < 36
+    if not inrange then
+      errorprint("Put failed: You are trying to reach too far.")
+    else
+      local avail = myplayer.get_item_count(tokens[3])
+      local amt = tokens[4]
+      local otherinv = myplayer.selected.get_inventory(tokens[5])
+
+      if avail < amt then amt = avail end
+      if avail > 0 then
+        local amt = otherinv.insert{name=tokens[3], count=amt}
+        if amt > 0 then
+          myplayer.remove_item{name=tokens[3], count=amt}
+          if amt < tokens[4] then errorprint("Put sub-optimal: Only put " .. amt .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
+        else errorprint("Put failed: No space at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
+      else errorprint("Put failed: No items") end
+    end
+  else errorprint("Put failed: No object at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
 end
+
 commands["speed"] = function (tokens)
+  if allowspeed then game.speed = tokens[2] end
+  debugprint("Speed: " .. tokens[2])
 end
+
 commands["take"] = function (tokens)
+  myplayer.update_selected_entity(tokens[2])
+  if myplayer.selected then
+    -- Check if we are in reach of this tile
+    local inrange = ((tokens[2][1]-myplayer.position.x)^2+(tokens[2][2]-myplayer.position.y)^2) < 36
+    if not inrange then
+      errorprint("Take failed: You are trying to reach too far.")
+    else
+      local otherinv = myplayer.selected.get_inventory(tokens[5])
+
+      if otherinv then
+        local amt = tokens[4]
+        local avail = otherinv.get_item_count(tokens[3])
+        if amt == "all" then amt = avail
+        elseif avail < amt then amt = avail end
+        if avail > 0 then
+          local amt = myplayer.insert{name=tokens[3], count=amt}
+          if debugmode then myplayer.print("[" .. curtick .. "] Took " .. amt .. "x " .. tokens[3] .. " from " .. myplayer.selected.name  .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
+          if amt > 0 then
+            otherinv.remove{name=tokens[3], count=amt}
+            if tokens[4] ~= "all" and amt < tokens[4] then myplayer.print("[" .. curtick .. "] Take sub-optimal: Only took " .. amt .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
+          else errorprint("Take failed: No space at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
+        else errorprint("Take failed: No items at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
+      else errorprint("Take failed: Unable to access inventories") end
+    end
+  else errorprint("Take failed: No object at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
 end
+
 commands["tech"] = function (tokens)
+  myplayer.force.current_research = tokens[2]
+  debugprint("Research: " .. tokens[2])
 end
+
 commands["print"] = function (tokens)
+  myplayer.print(tokens[2])
 end
+
 commands["recipe"] = function (tokens)
+  myplayer.update_selected_entity(tokens[2])
+  myplayer.selected.recipe = tokens[3]
+  debugprint("Setting recipe: " .. tokens[3] .. " at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") 
+end
+
+commands["rotate"] = function (tokens)
+  myplayer.update_selected_entity(tokens[2])
+  if myplayer.selected then
+    myplayer.selected.direction = directions[tokens[3]]
+  end
+  debugprint("Rotating " .. myplayer.selected.name  .. " so that it faces " .. tokens[3] .. ".")
 end
 
 script.on_event(defines.events.on_tick, function(event)
   curtick = curtick + 1
   if commandqueue[curtick] then
     for k,v in pairs(commandqueue[curtick]) do
-      elseif tokens[1] == "mine" then
-        if tokens[2] then
-          if tokens[2][1] ~= roundn(tokens[2][1]) or tokens[2][2] ~= roundn(tokens[2][2]) then
-            hasdecimals = true
-          else
-            hasdecimals = false
-          end
-        end
-      elseif tokens[1] == "craft" then
-        if debugmode then myplayer.print("[" .. curtick .. "] Crafting: " .. tokens[2] .. " x" .. (tokens[3] or 1)) end
-        myplayer.begin_crafting{recipe = tokens[2], count = tokens[3] or 1}
-      elseif tokens[1] == "stopcraft" then
-        if debugmode then myplayer.print("[" .. curtick .. "] Craft abort: Index " .. tokens[2] .. " x" .. (tokens[3] or 1)) end
-        myplayer.cancel_crafting{index = tokens[2], count = tokens[3] or 1}
-      elseif tokens[1] == "build" then
-        if debugmode then myplayer.print("[" .. curtick .. "] Building: " .. tokens[2] .. " on tile (" .. tokens[3][1] .. "," .. tokens[3][2] .. ")") end
-        -- Check if we have the item
-        local have = myplayer.get_item_count(tokens[2])
-        -- Check if we are in reach of this tile
-        local inrange = ((tokens[3][1]-myplayer.position.x)^2+(tokens[3][2]-myplayer.position.y)^2) < 36
-        -- Check if we can actually place the item at this tile
-        local canplace = myplayer.surface.can_place_entity{name = tokens[2], position = {tokens[3][1],tokens[3][2]}, force = "player"}
-        -- Error messages if relevant
-        if have == 0 then myplayer.print("[" .. curtick .. "] ___WARNING___ Build failed: No item available")
-        elseif not inrange then myplayer.print("[" .. curtick .. "] ___WARNING___ Build failed: You are trying to place beyond realistic reach")
-        elseif not canplace then myplayer.print("[" .. curtick .. "] ___WARNING___ Build failed: Something is in the way")
-          -- If no errors, proceed to actually building things
-        else
-          -- Place the item
-          asm = myplayer.surface.create_entity{name = tokens[2], position = {tokens[3][1], tokens[3][2]}, direction = tokens[4], force="player"}
-          -- Remove the placed item from the player (since he has now spent it)
-          if asm then myplayer.remove_item({name = tokens[2], count = 1})
-          else myplayer.print("[" .. curtick "] Build failed: Reason unknown.") end
-        end
-      elseif tokens[1] == "put" then
-        myplayer.update_selected_entity(tokens[2])
-        if debugmode then myplayer.print("[" .. curtick .. "] Put " .. tokens[4] .. "x " .. tokens[3] .. " into " .. myplayer.selected.name  .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-        if myplayer.selected then
-          -- Check if we are in reach of this tile
-          local inrange = ((tokens[2][1]-myplayer.position.x)^2+(tokens[2][2]-myplayer.position.y)^2) < 36
-          if not inrange then
-            myplayer.print("[" .. curtick .. "] ___WARNING___ Put failed: You are trying to reach too far.")
-          else
-            local avail = myplayer.get_item_count(tokens[3])
-            local amt = tokens[4]
-            local otherinv = myplayer.selected.get_inventory(tokens[5])
-
-            if avail < amt then amt = avail end
-            if avail > 0 then
-              local amt = otherinv.insert{name=tokens[3], count=amt}
-              if amt > 0 then
-                myplayer.remove_item{name=tokens[3], count=amt}
-                if amt < tokens[4] then myplayer.print("[" .. curtick .. "] ___WARNING___ Put sub-optimal: Only put " .. amt .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-              else myplayer.print("[" .. curtick .. "] ___WARNING___ Put failed: No space at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-            else myplayer.print("[" .. curtick .. "] ___WARNING___ Put failed: No items") end
-          end
-        else myplayer.print("[" .. curtick .. "] Put failed: No object at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-      elseif tokens[1] == "take" then
-        myplayer.update_selected_entity(tokens[2])
-
-        if myplayer.selected then
-          -- Check if we are in reach of this tile
-          local inrange = ((tokens[2][1]-myplayer.position.x)^2+(tokens[2][2]-myplayer.position.y)^2) < 36
-          if not inrange then
-            myplayer.print("[" .. curtick .. "] ___WARNING___ Take failed: You are trying to reach too far.")
-          else
-            local otherinv = myplayer.selected.get_inventory(tokens[5])
-
-            if otherinv then
-              local amt = tokens[4]
-              local avail = otherinv.get_item_count(tokens[3])
-              if amt == "all" then amt = avail
-              elseif avail < amt then amt = avail end
-              if avail > 0 then
-                local amt = myplayer.insert{name=tokens[3], count=amt}
-                if debugmode then myplayer.print("[" .. curtick .. "] Took " .. amt .. "x " .. tokens[3] .. " from " .. myplayer.selected.name  .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-                if amt > 0 then
-                  otherinv.remove{name=tokens[3], count=amt}
-                  if tokens[4] ~= "all" and amt < tokens[4] then myplayer.print("[" .. curtick .. "] Take sub-optimal: Only took " .. amt .. " at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-                else myplayer.print("[" .. curtick .. "] ___WARNING___ Take failed: No space at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-              else myplayer.print("[" .. curtick .. "] ___WARNING___ Take failed: No items at {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-            else myplayer.print("[" .. curtick .. "] Take failed: Unable to access inventories") end
-          end
-        else myplayer.print("[" .. curtick .. "] Take failed: No object at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-      elseif tokens[1] == "tech" then
-        if debugmode then myplayer.print("[" .. curtick .. "] Research: " .. tokens[2]) end
-        myplayer.force.current_research = tokens[2]
-      elseif tokens[1] == "speed" then
-        if debugmode then myplayer.print("[" .. curtick .. "] Speed: " .. tokens[2]) end
-        if allowspeed then game.speed = tokens[2] end
-      elseif tokens[1] == "recipe" then
-        if debugmode then myplayer.print("[" .. curtick .. "] Setting recipe: " .. tokens[3] .. " at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") end
-        myplayer.update_selected_entity(tokens[2])
-        myplayer.selected.recipe = tokens[3]
-      elseif tokens[1] == "print" then
-        myplayer.print(tokens[2])
-      elseif tokens[1] == "rotate" then
-        myplayer.update_selected_entity(tokens[2])
-        if debugmode then myplayer.print("[" .. curtick .. "] Rotating " .. myplayer.selected.name  .. " so that it faces " .. tokens[3] .. ".") end
-        if myplayer.selected then
-          myplayer.selected.direction = directions[tokens[3]]
-        end
-      end
+      commands[v[1]](v)
     end
   end
   myplayer.walking_state = walkstate
