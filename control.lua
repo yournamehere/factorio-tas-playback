@@ -1,6 +1,5 @@
 local commandqueue = require("run0p15")
 
-local debugmode = commandqueue.settings.debugmode
 local allowspeed = commandqueue.settings.allowspeed
 
 local myplayer = nil
@@ -27,7 +26,7 @@ function inrange(position)
 end
 
 function debugprint(msg)
-  if debugmode then myplayer.print("[" .. game.tick .. "] " .. msg) end
+  if settings.global["tas-verbose-logging"].value then myplayer.print("[" .. game.tick .. "] " .. msg) end
 end
 
 function errprint(msg)

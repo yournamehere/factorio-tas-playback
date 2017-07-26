@@ -2,7 +2,6 @@
 local commandqueue = {}
 
 commandqueue["settings"] = {
-    debugmode = true,
     allowspeed = true
 }
 
