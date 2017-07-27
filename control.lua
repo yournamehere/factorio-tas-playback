@@ -261,7 +261,6 @@ script.on_event(defines.events.on_tick, function(event)
 		if not myplayer then myplayer = global.myplayer end
 		if commandqueue[tick] then
 			for k,v in pairs(commandqueue[tick]) do
-				--if tas_debugmode then game.print("tick " .. tick .. " : " .. v[1] .. "(" .. unpack(v) .. ")") end
 				commands[v[1]](v)
 			end
 		end
