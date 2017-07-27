@@ -1,5 +1,4 @@
 require("util")
-require("configuration")
 
 local myplayer = nil
 global.TAS_runs = {}
@@ -245,13 +244,11 @@ function init_run(commandqueue)
 	global.debugmode  = commandqueue.settings.debugmode
 	global.allowspeed = commandqueue.settings.allowspeed
 	global.start_tick = game.tick
-	if tas_debugmode then
-		game.print("initializing the run")
-		local count = 0
-		for v,k in pairs(commandqueue) do count = count+1 end
-		game.print("command queue size is " .. count)
-		game.print("stating tick is " .. global.start_tick)
-	end
+	debugprint("initializing the run")
+	local count = 0
+	for v,k in pairs(commandqueue) do count = count+1 end
+	debugprint("command queue size is " .. count)
+	debugprint("stating tick is " .. global.start_tick)
 end
 
 script.on_event(defines.events.on_tick, function(event)
