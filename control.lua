@@ -134,6 +134,10 @@ commands["put"] = function (tokens)
     errprint("Put failed: No items")
     return
   end
+  if not otherinv then
+	errprint("Put failed : Target doesn't have an inventory")
+	return
+  end
 
   local inserted = otherinv.insert{name=item, count=toinsert}
 
@@ -240,10 +244,8 @@ end
 ------------------------------------
 -- Functions that control the run --
 ------------------------------------
-
 -- This function grabs the run data defined by the scenario
-function init_run(commandqueue)
-	global.commandqueue = table.deepcopy(commandqueue)
+function init_run()
 	global.allowspeed = commandqueue.settings.allowspeed
 	global.start_tick = game.tick
 	debugprint("initializing the run")
@@ -253,8 +255,17 @@ function init_run(commandqueue)
 	debugprint("stating tick is " .. global.start_tick)
 end
 
+function init_player_inventory(player)
+	-- Initiate the player's inventory
+	player.clear_items_inside()
+	player.insert{name="iron-plate", count=8}
+	player.insert{name="pistol", count=1}
+	player.insert{name="firearm-magazine", count=10}
+	player.insert{name="burner-mining-drill", count = 1}
+	player.insert{name="stone-furnace", count = 1}
+end
+
 script.on_event(defines.events.on_tick, function(event)
-	local commandqueue = global.commandqueue
 	if commandqueue then
 		local tick = game.tick - global.start_tick
 		if not myplayer then myplayer = global.myplayer end
@@ -279,7 +290,19 @@ script.on_event(defines.events.on_player_created, function(event)
 	game.surfaces[1].always_day = true
 	myplayer.game_view_settings.update_entity_selection = false
 	myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
+	init_player_inventory(myplayer)
 end)
 
 -- Create the interface that allows to launch a run
-remote.add_interface("TAS_playback", {launch = init_run})
+remote.add_interface("TAS_playback", {launch = function() 
+	init_run()
+end})
+
+
+-- Get the path of the scenario and the name of the run file through a very dirty trick
+for k,v in pairs(remote.interfaces) do
+	tas_name = tas_name or string.match(k,"^TASName_(.+)$")
+	run_file = run_file or string.match(k,"^TASFile_(.+)$")
+end
+-- Get the run instructions everytime the game is loaded
+commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
