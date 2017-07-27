@@ -1,3 +1,6 @@
+require("util")
+require("configuration")
+
 local myplayer = nil
 global.TAS_runs = {}
 global.walkstate = {walking = false}
@@ -238,21 +241,27 @@ end
 
 -- This function grabs the run data defined by the scenario
 function init_run(commandqueue)
-	global.commandqueue = commandqueue
+	global.commandqueue = table.deepcopy(commandqueue)
 	global.debugmode  = commandqueue.settings.debugmode
 	global.allowspeed = commandqueue.settings.allowspeed
 	global.start_tick = game.tick
-	game.print("initializing the run")
-	game.print("stating tick is " .. global.start_tick)
+	if tas_debugmode then
+		game.print("initializing the run")
+		local count = 0
+		for v,k in pairs(commandqueue) do count = count+1 end
+		game.print("command queue size is " .. count)
+		game.print("stating tick is " .. global.start_tick)
+	end
 end
 
 script.on_event(defines.events.on_tick, function(event)
-	comandqueue = global.commandqueue
+	local commandqueue = global.commandqueue
 	if commandqueue then
-		tick = game.tick - global.start_tick
+		local tick = game.tick - global.start_tick
 		if not myplayer then myplayer = global.myplayer end
 		if commandqueue[tick] then
 			for k,v in pairs(commandqueue[tick]) do
+				--if tas_debugmode then game.print("tick " .. tick .. " : " .. v[1] .. "(" .. unpack(v) .. ")") end
 				commands[v[1]](v)
 			end
 		end
