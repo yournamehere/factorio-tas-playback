@@ -1,7 +1,6 @@
 require("util")
 
 local myplayer = nil
-global.TAS_runs = {}
 global.walkstate = {walking = false}
 global.minestate = nil
 
