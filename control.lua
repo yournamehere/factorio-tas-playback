@@ -135,7 +135,7 @@ commands["put"] = function (tokens)
     return
   end
   if not otherinv then
-	errprint("Put failed : Target doesn't have an inventory")
+	errprint("Put failed : Target doesn't have an inventory at {" .. position[1] .. "," .. position[2] .. "}.")
 	return
   end
 
@@ -150,9 +150,9 @@ commands["put"] = function (tokens)
   myplayer.remove_item{name=item, count = inserted}
 
   if inserted < amount then
-    errprint("Put sub-optimal: Only put " .. amt .. " at {" .. position[1] .. "," .. position[2] .. "}.")
+    errprint("Put sub-optimal: Only put " .. inserted .. "x " .. item  .. " instead of " .. amount .. "x " .. item .. " at {" .. position[1] .. "," .. position[2] .. "}.")
   end
-  debugprint("Put " .. amount .. "x " .. item .. " into " .. myplayer.selected.name  .. " at {" .. position[1] .. "," .. position[2] .. "}.")
+  debugprint("Put " .. inserted .. "x " .. item .. " into " .. myplayer.selected.name  .. " at {" .. position[1] .. "," .. position[2] .. "}.")
 end
 
 commands["speed"] = function (tokens)
@@ -223,6 +223,10 @@ end
 
 commands["recipe"] = function (tokens)
   myplayer.update_selected_entity(tokens[2])
+  if not myplayer.selected then
+	errprint("Setting recipe: Entity at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "} could not be selected.")
+	return
+  end
   myplayer.selected.recipe = tokens[3]
   debugprint("Setting recipe: " .. tokens[3] .. " at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") 
 end
