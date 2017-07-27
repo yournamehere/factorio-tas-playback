@@ -1,6 +1,6 @@
 require("util")
 
-local myplayer = nil
+myplayer = nil
 global.walkstate = {walking = false}
 global.minestate = nil
 
@@ -24,11 +24,15 @@ function inrange(position)
 end
 
 function debugprint(msg)
-  if debugmode then myplayer.print("[" .. game.tick .. "] " .. msg) end
+	if settings.global["tas-verbose-logging"].value then 
+		outp = myplayer or game
+		outp.print("[" .. game.tick .. "] " .. msg)
+	end
 end
 
 function errprint(msg)
-  myplayer.print("[" .. game.tick .. "]  ___WARNING___ " .. msg)
+	outp = myplayer or game
+	outp.print("[" .. game.tick .. "]  ___WARNING___ " .. msg)
 end
 
 local commands = {}
@@ -240,7 +244,6 @@ end
 -- This function grabs the run data defined by the scenario
 function init_run(commandqueue)
 	global.commandqueue = table.deepcopy(commandqueue)
-	global.debugmode  = commandqueue.settings.debugmode
 	global.allowspeed = commandqueue.settings.allowspeed
 	global.start_tick = game.tick
 	debugprint("initializing the run")
