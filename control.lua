@@ -1,9 +1,5 @@
-local commandqueue = require("run0p15")
-
-local debugmode = commandqueue.settings.debugmode
-local allowspeed = commandqueue.settings.allowspeed
-
 local myplayer = nil
+global.TAS_runs = {}
 global.walkstate = {walking = false}
 global.minestate = nil
 
@@ -236,25 +232,47 @@ commands["rotate"] = function (tokens)
   debugprint("Rotating " .. myplayer.selected.name  .. " so that it faces " .. direction .. ".")
 end
 
+------------------------------------
+-- Functions that control the run --
+------------------------------------
+
+-- This function grabs the run data defined by the scenario
+function init_run(commandqueue)
+	global.commandqueue = commandqueue
+	global.debugmode  = commandqueue.settings.debugmode
+	global.allowspeed = commandqueue.settings.allowspeed
+	global.start_tick = game.tick
+	game.print("initializing the run")
+	game.print("stating tick is " .. global.start_tick)
+end
+
 script.on_event(defines.events.on_tick, function(event)
-  if not myplayer then myplayer = global.myplayer end
-  if commandqueue[game.tick] then
-    for k,v in pairs(commandqueue[game.tick]) do
-      commands[v[1]](v)
-    end
-  end
-  myplayer.walking_state = global.walkstate
-  if not global.minestate then myplayer.mining_state = {mining = false}
-  else
-    myplayer.update_selected_entity(global.minestate)
-    myplayer.mining_state = {mining = true, position = global.minestate}
-  end
+	comandqueue = global.commandqueue
+	if commandqueue then
+		tick = game.tick - global.start_tick
+		if not myplayer then myplayer = global.myplayer end
+		if commandqueue[tick] then
+			for k,v in pairs(commandqueue[tick]) do
+				commands[v[1]](v)
+			end
+		end
+		myplayer.walking_state = global.walkstate
+		if not global.minestate then 
+			myplayer.mining_state = {mining = false}
+		else
+			myplayer.update_selected_entity(global.minestate)
+			myplayer.mining_state = {mining = true, position = global.minestate}
+		end
+	end
 end)
 
 script.on_event(defines.events.on_player_created, function(event)
-  myplayer = game.players[event.player_index]
-  global.myplayer = myplayer
-  game.surfaces[1].always_day = true
-  myplayer.game_view_settings.update_entity_selection = false
-  myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
+	myplayer = game.players[event.player_index]
+	global.myplayer = myplayer
+	game.surfaces[1].always_day = true
+	myplayer.game_view_settings.update_entity_selection = false
+	myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
 end)
+
+-- Create the interface that allows to launch a run
+remote.add_interface("TAS_playback", {launch = init_run})
