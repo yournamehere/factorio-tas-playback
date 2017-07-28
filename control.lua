@@ -1,22 +1,4 @@
 require("util")
--- Global variables initialization
-myplayer = nil
-global.walkstate = {walking = false}
-global.minestate = nil
-global.allowspeed = nil
-global.start_tick = nil
-global.running = false
-
--- Get the path of the scenario and the name of the run file through a very dirty trick
-for k,v in pairs(remote.interfaces) do
-	tas_name = tas_name or string.match(k,"^TASName_(.+)$")
-	run_file = run_file or string.match(k,"^TASFile_(.+)$")
-end
--- Get the run instructions everytime the game is loaded
-local commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
--- Get the commands that the speedrun can use
-local TAScommands = require("commands")
-
 -- Utility functions
 
 function roundn(x)
@@ -38,6 +20,30 @@ function errprint(msg)
 	outp = myplayer or game
 	outp.print("[" .. game.tick .. "]  ___WARNING___ " .. msg)
 end
+
+-- Global variables initialization
+myplayer = nil
+init_on_player_created = false
+global.walkstate = {walking = false}
+global.minestate = nil
+global.allowspeed = nil
+global.start_tick = nil
+global.running = false
+
+-- Get the path of the scenario and the name of the run file through a very dirty trick
+for k,v in pairs(remote.interfaces) do
+	tas_name = tas_name or string.match(k,"^TASName_(.+)$")
+	run_file = run_file or string.match(k,"^TASFile_(.+)$")
+end
+-- Get the run instructions everytime the game is loaded
+if tas_name and run_file then
+	local commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
+else
+	-- Currently do nothing as I don't know how an error can be generated at that point of the game. Nothing's initialized !!! 
+	--errprint("The run's scenario doesn't seem to be running. Please make sure you launched the scenario. ")
+end
+-- Get the commands that the speedrun can use
+local TAScommands = require("commands")
 
 ------------------------------------
 -- Functions that control the run --
@@ -85,6 +91,15 @@ function init_player()
 	init_player_inventory(myplayer)
 end
 
+function init_world(player_index)
+	myplayer = game.players[player_index]
+	global.myplayer = myplayer
+	game.surfaces["nauvis"].always_day = true
+	myplayer.game_view_settings.update_entity_selection = false
+	-- Reveal the map around the player
+	myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
+end
+
 script.on_event(defines.events.on_tick, function(event)
 	if commandqueue and global.running then
 		local tick = game.tick - global.start_tick
@@ -105,16 +120,21 @@ script.on_event(defines.events.on_tick, function(event)
 end)
 
 script.on_event(defines.events.on_player_created, function(event)
-	myplayer = game.players[event.player_index]
-	global.myplayer = myplayer
-	game.surfaces["nauvis"].always_day = true
-	myplayer.game_view_settings.update_entity_selection = false
-	-- Reveal the map around the player
-	myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
+	init_world(event.player_index)
+	if init_on_player_created then
+		init_run()
+	end
 end)
 
 -- Create the interface and command that allow to launch a run
 script.on_init(function()
-	remote.add_interface("TAS_playback", {launch = init_run})
+	remote.add_interface("TAS_playback", {launch = function() 
+		-- The event on_player_created of the scenario is triggered before the mod sees the player as created
+		if game.player then
+			init_run()
+		else
+			init_on_player_created = true
+		end
+	end})
 	commands.add_command("init_run", "Start the speedrun", init_run)
 end)
