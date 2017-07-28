@@ -40,7 +40,7 @@ if tas_name and run_file then
 	local commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
 else
 	-- Currently do nothing as I don't know how an error can be generated at that point of the game. Nothing's initialized !!! 
-	--errprint("The run's scenario doesn't seem to be running. Please make sure you launched the scenario. ")
+	error("The run's scenario doesn't seem to be running. Please make sure you launched the scenario. ")
 end
 -- Get the commands that the speedrun can use
 local TAScommands = require("commands")
