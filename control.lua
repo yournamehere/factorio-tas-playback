@@ -37,9 +37,9 @@ for k,v in pairs(remote.interfaces) do
 end
 -- Get the run instructions everytime the game is loaded
 if tas_name and run_file then
-	local commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
+	commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
 else
-	-- Currently do nothing as I don't know how an error can be generated at that point of the game. Nothing's initialized !!! 
+	-- Currently throw a standard lua error since the custom error management system we use cannot be used. Nothing's initialized !!! 
 	error("The run's scenario doesn't seem to be running. Please make sure you launched the scenario. ")
 end
 -- Get the commands that the speedrun can use
@@ -53,6 +53,10 @@ function init_run()
 	debugprint("Initializing the run")
 	local count = 0
 	local tickcount = 0
+	if not commandqueue then
+		errprint("The command queue is empty ! No point in starting.")
+		return
+	end
 	for k,v in pairs(commandqueue) do 
 		count = count+1
 		tickcount = tickcount + ((type(k) == "number" and 1) or 0) 
