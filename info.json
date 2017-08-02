@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "factorio_version" : "0.15",
   "title": "TAS Playback",
-  "author": "Starbrow",
+  "author": "Starbrow, your name here and Alastor",
   "homepage": "",
   "description": "Plays back a prerecorded TAS",
   "dependencies": ["base >= 0.15.30"],
