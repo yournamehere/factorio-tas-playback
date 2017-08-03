@@ -50,5 +50,40 @@ To start playing the run :
 	* If you want to play a TAS run, please use a scenario as instructed above. 
 * Due to the way the mod loads the instructions for the run, the scenarios have to be located in the mod's folder and cannot be located in the standard scenarios folder. 
 * The menu _Options_ -> _Mods_ gives you options about the level of verbosity you want when displaying what the run does. 
- 
- 
+
+## Writing a run
+Your run file (in our example `YourRunFile.lua`) should start with the lines : 
+```
+local commandqueue = {}
+
+commandqueue["settings"] = {
+    allowspeed = true
+}
+```
+You can change `allowspeed = true` by `allowspeed = false` if you want to inhibit the `speed` commands of your run. 
+The rest of the file should consist of a series of instruction that take the following form : 
+```
+commandqueue[<tick>] = {
+    {<command1>, <options1>},
+    {<command2>, <options2>}, 
+	...
+}
+```
+Where : 
+* `<tick>` is the number of the tick where these commands will be executed (the start of the run being tick 0)
+* Each `{<command>, <options>}` sequence represents an action to be executed by the TAS. It can be chosen in the following list : 
+	* `{"move","<DIRECTION>"}` commands the player to start moving in a direction or stop. Directions can be `N`,`S`,`E`,`W`,`NE`,`SE`,`SW`,`NW` or `STOP`.
+	* `{"craft","<ITEM>", <AMOUNT>}` commands the player to pocket-craft given amount of specified item. 
+	* `{"mine", {<X>,<Y>}}` commands the player to start mining at specified coordinated. To stop mining, replace `{<X>,<Y>}` with `nil`.
+	* `{"build","<ITEM>", {<X>,<Y>}, <FACING DIRECTION>}` commands the player to build the specified item at the specified coordinates, with the item facing a certain direction. The `<FACING DIRECTION>` should be an element of the factorio class [`defines.direction`](http://lua-api.factorio.com/latest/defines.html#defines.direction ). 
+	* `{"put",{X,Y},"<ITEM>", <AMOUNT>, <destination inventory type>}` commands the player to put the specified amount of the specified item into the inventory of the entity at the given coordinates. The `<destination inventory type>` must be an element of the factorio class [`defines.inventory`](http://lua-api.factorio.com/latest/defines.html#defines.inventory ) that says which inventory slot is to be used. 
+	* `{"speed", <speed>}` sets the game speed if `allowspeed` is at `true`. Otherwise, a warning will be generated. 
+	* `{"take",{<X>,<Y>},"<ITEM>",<AMOUNT>,<source inventory type>}` commands the player to take the specified amount of the specified item from the inventory of the entity at the given coordinates. The `<source inventory type>` must be an element of the factorio class [`defines.inventory`](http://lua-api.factorio.com/latest/defines.html#defines.inventory ) that says which inventory slot is to be used. 
+	* `{"tech", <RESEARCH>}` sets the current research as specified. 
+	* `{"print", "<text>"}` prints some text in the tchat. 
+	* `{"recipe", {<X>,<Y>}, <recipe>}` sets the recipe of the entity at the given coordinates. 
+	* `{"rotate", {<X>,<Y>}, "<direction>"}` rotates the entity at the given coordinates to face the direction specified, among directions `N`,`S`,`E`,`W`. 
+	* `{"stopcraft", <Index>, <Quantity>}` cancels the crafting of the given quantity of the items at the given index in the queue. If the `<Quantity>` is not specified, 1 will be used. 
+	
+	
+	
