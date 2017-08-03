@@ -133,8 +133,12 @@ TAScommands["put"] = function (tokens)
 end
 
 TAScommands["speed"] = function (tokens)
-  if allowspeed then game.speed = tokens[2] end
-  debugprint("Speed: " .. tokens[2])
+  if global.allowspeed then 
+    game.speed = tokens[2]
+    debugprint("Speed: " .. tokens[2])
+  else
+    errprint("Speed failed : Changing the speed of the run is not allowed. ")
+  end
 end
 
 TAScommands["take"] = function (tokens)

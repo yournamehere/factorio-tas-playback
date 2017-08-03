@@ -72,6 +72,7 @@ function init_run()
 		return
 	end
 	global.allowspeed = commandqueue.settings.allowspeed
+	debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
 	init_player()
 	
 	global.start_tick = game.tick
