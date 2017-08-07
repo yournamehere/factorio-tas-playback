@@ -29,6 +29,9 @@ global.minestate = nil
 global.allowspeed = nil
 global.start_tick = nil
 global.running = false
+max_tick = nil
+command_count = 0
+tick_count = 0
 
 -- Get the path of the scenario and the name of the run file through a very dirty trick
 for k,v in pairs(remote.interfaces) do
@@ -38,6 +41,14 @@ end
 -- Get the run instructions everytime the game is loaded
 if tas_name and run_file then
 	commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
+	-- determine numberof commands, of ticks and last tick, each time the run is loaded.
+	for k,v in pairs(commandqueue) do 
+		command_count = command_count+1
+		if type(k) == "number" then
+			tick_count = tick_count + 1
+			max_tick = k
+		end
+	end
 else
 	-- Currently throw a standard lua error since the custom error management system we use cannot be used. Nothing's initialized !!! 
 	error("The run's scenario doesn't seem to be running. Please make sure you launched the scenario. ")
@@ -51,22 +62,15 @@ local TAScommands = require("commands")
 -- This function initializes the run's clock and a few properties
 function init_run()
 	debugprint("Initializing the run")
-	local count = 0
-	local tickcount = 0
 	if not commandqueue then
 		errprint("The command queue is empty ! No point in starting.")
 		return
 	end
-	for k,v in pairs(commandqueue) do 
-		count = count+1
-		tickcount = tickcount + ((type(k) == "number" and 1) or 0) 
-	end
-	debugprint("command queue size is " .. count)
-	if tickcount == 0 then
+	debugprint("command queue size is " .. command_count)
+	if tick_count == 0 then
 		errprint("The command queue is empty ! No point in starting.")
 		return
 	end
-	
 	if not commandqueue.settings then
 		errmessage("The settings for of the command queue don't exist.")
 		return
@@ -120,6 +124,9 @@ script.on_event(defines.events.on_tick, function(event)
 		else
 			myplayer.update_selected_entity(global.minestate)
 			myplayer.mining_state = {mining = true, position = global.minestate}
+		end
+		if tick == max_tick then
+			myplayer.game_view_settings.update_entity_selection = true
 		end
 	end
 end)
