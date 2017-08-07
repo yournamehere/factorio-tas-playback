@@ -41,6 +41,7 @@ end
 -- Get the run instructions everytime the game is loaded
 if tas_name and run_file then
 	commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
+	-- Command queue stats : 
 	-- determine numberof commands, of ticks and last tick, each time the run is loaded.
 	for k,v in pairs(commandqueue) do 
 		command_count = command_count+1
@@ -62,6 +63,7 @@ local TAScommands = require("commands")
 -- This function initializes the run's clock and a few properties
 function init_run()
 	debugprint("Initializing the run")
+	-- Examine the command queue for errors. 
 	if not commandqueue then
 		errprint("The command queue is empty ! No point in starting.")
 		return
@@ -75,8 +77,10 @@ function init_run()
 		errmessage("The settings for of the command queue don't exist.")
 		return
 	end
+	-- Applying command queue settings
 	global.allowspeed = commandqueue.settings.allowspeed
 	debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
+	-- Initiating the game
 	init_player()
 	
 	global.start_tick = game.tick
@@ -109,6 +113,12 @@ function init_world(player_index)
 	myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
 end
 
+function end_of_input()
+	if commandqueue.settings.end_tick_debug then
+		myplayer.game_view_settings.update_entity_selection = true
+	end
+end
+
 script.on_event(defines.events.on_tick, function(event)
 	if commandqueue and global.running then
 		local tick = game.tick - global.start_tick
@@ -126,7 +136,7 @@ script.on_event(defines.events.on_tick, function(event)
 			myplayer.mining_state = {mining = true, position = global.minestate}
 		end
 		if tick == max_tick then
-			myplayer.game_view_settings.update_entity_selection = true
+			end_of_input()
 		end
 	end
 end)

@@ -61,6 +61,9 @@ commandqueue["settings"] = {
 }
 ```
 You can change `allowspeed = true` by `allowspeed = false` if you want to inhibit the `speed` commands of your run. 
+
+If you include the line `end_tick_debug = true` in the `settings` section, the game will give the player back the control of mouse selection after the end of input. 
+
 The rest of the file should consist of a series of instruction that take the following form : 
 ```
 commandqueue[<tick>] = {

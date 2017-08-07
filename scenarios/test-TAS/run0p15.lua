@@ -2,7 +2,8 @@
 local commandqueue = {}
 
 commandqueue["settings"] = {
-    allowspeed = true
+    allowspeed = true,
+	end_tick_debug = true
 }
 
 -- PRESENT POSSIBLE COMMANDS:
