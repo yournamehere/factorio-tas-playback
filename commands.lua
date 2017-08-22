@@ -14,7 +14,7 @@ local TAScommands = {}
 
 -- Definitions of the TAScommands
 
-TAScommands["move"] = function (tokens)
+TAScommands["move"] = function (tokens, myplayer)
   debugprint("Moving: " .. tokens[2])
   global.walkstate = directions[tokens[2]]
   if tokens[2] == "STOP" then
@@ -22,17 +22,17 @@ TAScommands["move"] = function (tokens)
   end
 end
 
-TAScommands["craft"] = function (tokens)
+TAScommands["craft"] = function (tokens, myplayer)
   myplayer.begin_crafting{recipe = tokens[2], count = tokens[3] or 1}
   debugprint("Crafting: " .. tokens[2] .. " x" .. (tokens[3] or 1))
 end
 
-TAScommands["stopcraft"] = function (tokens)
+TAScommands["stopcraft"] = function (tokens, myplayer)
   myplayer.cancel_crafting{index = tokens[2], count = tokens[3] or 1}
   debugprint("Craft abort: Index " .. tokens[2] .. " x" .. (tokens[3] or 1))
 end
 
-TAScommands["mine"] = function (tokens)
+TAScommands["mine"] = function (tokens, myplayer)
   local position = tokens[2]
   if position then
     if position[1] ~= roundn(position[1]) or position[2] ~= roundn(position[2]) then
@@ -51,7 +51,7 @@ TAScommands["mine"] = function (tokens)
   else debugprint("Mining: STOP") end
 end
 
-TAScommands["build"] = function (tokens)
+TAScommands["build"] = function (tokens, myplayer)
   local item = tokens[2]
   local position = tokens[3]
   local direction = tokens[4]
@@ -85,7 +85,7 @@ TAScommands["build"] = function (tokens)
 
 end
 
-TAScommands["put"] = function (tokens)
+TAScommands["put"] = function (tokens, myplayer)
   local position = tokens[2]
   local item = tokens[3]
   local amount = tokens[4]
@@ -132,7 +132,7 @@ TAScommands["put"] = function (tokens)
   debugprint("Put " .. inserted .. "x " .. item .. " into " .. myplayer.selected.name  .. " at {" .. position[1] .. "," .. position[2] .. "}.")
 end
 
-TAScommands["speed"] = function (tokens)
+TAScommands["speed"] = function (tokens, myplayer)
   if global.allowspeed then
     game.speed = tokens[2]
     debugprint("Speed: " .. tokens[2])
@@ -141,7 +141,7 @@ TAScommands["speed"] = function (tokens)
   end
 end
 
-TAScommands["take"] = function (tokens)
+TAScommands["take"] = function (tokens, myplayer)
   local position = tokens[2]
   local item = tokens[3]
   local amount = tokens[4]
@@ -193,16 +193,16 @@ TAScommands["take"] = function (tokens)
 
 end
 
-TAScommands["tech"] = function (tokens)
+TAScommands["tech"] = function (tokens, myplayer)
   myplayer.force.current_research = tokens[2]
   debugprint("Research: " .. tokens[2])
 end
 
-TAScommands["print"] = function (tokens)
+TAScommands["print"] = function (tokens, myplayer)
   myplayer.print(tokens[2])
 end
 
-TAScommands["recipe"] = function (tokens)
+TAScommands["recipe"] = function (tokens, myplayer)
   myplayer.update_selected_entity(tokens[2])
   if not myplayer.selected then
 	errprint("Setting recipe: Entity at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "} could not be selected.")
@@ -212,7 +212,7 @@ TAScommands["recipe"] = function (tokens)
   debugprint("Setting recipe: " .. tokens[3] .. " at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.")
 end
 
-TAScommands["rotate"] = function (tokens)
+TAScommands["rotate"] = function (tokens, myplayer)
   local position = tokens[2]
   local direction = tokens[3]
 

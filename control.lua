@@ -17,7 +17,7 @@ for k,v in pairs(remote.interfaces) do
 	tas_name = tas_name or string.match(k,"^TASName_(.+)$")
 	run_file = run_file or string.match(k,"^TASFile_(.+)$")
 end
--- Get the run instructions everytime the game is loaded
+-- Get the run instructions every time the game is loaded
 if tas_name and run_file then
 	commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
 	-- Command queue stats : 
@@ -109,7 +109,7 @@ script.on_event(defines.events.on_tick, function(event)
 		local myplayer = global.myplayer
 		if commandqueue[tick] then
 			for k,v in pairs(commandqueue[tick]) do
-				TAScommands[v[1]](v)
+				TAScommands[v[1]](v, myplayer)
 			end
 		end
 		myplayer.walking_state = global.walkstate
@@ -127,7 +127,7 @@ end)
 
 script.on_event(defines.events.on_player_created, function(event)
 	init_world(event.player_index)
-	if init_on_player_created then
+	if init_on_player_created and (event.player_index == 1) then -- Only the first player created automatically starts the run
 		init_run(event.player_index)
 	end
 end)
