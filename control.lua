@@ -41,7 +41,7 @@ local TAScommands = require("commands")
 -- Functions that control the run --
 ------------------------------------
 -- This function initializes the run's clock and a few properties
-function init_run()
+function init_run(player_index)
 	debugprint("Initializing the run")
 	-- Examine the command queue for errors. 
 	if not commandqueue then
@@ -61,7 +61,7 @@ function init_run()
 	global.allowspeed = commandqueue.settings.allowspeed
 	debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
 	-- Initiating the game
-	init_player()
+	init_player(player_index)
 	
 	global.start_tick = game.tick
 	debugprint("Stating tick is " .. global.start_tick)
@@ -79,15 +79,16 @@ function init_player_inventory(player)
 	player.insert{name="stone-furnace", count = 1}
 end
 
-function init_player()
-	myplayer.teleport({0,0})
-	init_player_inventory(myplayer)
+function init_player(player_index)
+	local player = game.players[player_index]
+	player.teleport({0,0})
+	init_player_inventory(player)
 end
 
 function init_world(player_index)
 	myplayer = game.players[player_index]
 	global.myplayer = myplayer
-	game.surfaces["nauvis"].always_day = true
+	myplayer.surface.always_day = true
 	myplayer.game_view_settings.update_entity_selection = false
 	-- Reveal the map around the player
 	myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
@@ -124,19 +125,19 @@ end)
 script.on_event(defines.events.on_player_created, function(event)
 	init_world(event.player_index)
 	if init_on_player_created then
-		init_run()
+		init_run(event.player_index)
 	end
 end)
+
+-- The function that runs the run from the console
+local function init_run_command(event)
+	init_run(event.player_index)
+end
 
 -- Create the interface and command that allow to launch a run
 script.on_init(function()
 	remote.add_interface("TAS_playback", {launch = function() 
-		-- The event on_player_created of the scenario is triggered before the mod sees the player as created
-		if game.player then
-			init_run()
-		else
-			init_on_player_created = true
-		end
+		init_on_player_created = true
 	end})
-	commands.add_command("init_run", "Start the speedrun", init_run)
+	commands.add_command("init_run", "Start the speedrun", init_run_command)
 end)
