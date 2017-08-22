@@ -61,7 +61,13 @@ function init_run(player_index)
 	global.allowspeed = commandqueue.settings.allowspeed
 	debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
 	-- Initiating the game
+	-- Prepare the player
 	init_player(player_index)
+	-- Prepare the world
+	local player = game.players[player_index]
+	global.myplayer = player --remove after cleaning up on_tick
+	player.surface.always_day = true
+	player.game_view_settings.update_entity_selection = false
 	
 	global.start_tick = game.tick
 	debugprint("Stating tick is " .. global.start_tick)
@@ -85,13 +91,11 @@ function init_player(player_index)
 	init_player_inventory(player)
 end
 
-function init_world(player_index)
+function init_world(player_index) --does what the freeplay scenario usually does
 	myplayer = game.players[player_index]
-	global.myplayer = myplayer
-	myplayer.surface.always_day = true
-	myplayer.game_view_settings.update_entity_selection = false
 	-- Reveal the map around the player
-	myplayer.force.chart(myplayer.surface, {{myplayer.position.x - 200, myplayer.position.y - 200}, {myplayer.position.x + 200, myplayer.position.y + 200}})
+	local pos = myplayer.position
+	myplayer.force.chart(myplayer.surface, {{pos.x - 200, pos.y - 200}, {pos.x + 200, pos.y + 200}})
 end
 
 function end_of_input()
