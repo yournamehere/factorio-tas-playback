@@ -58,31 +58,31 @@ TAScommands["build"] = function (tokens)
   debugprint("Building: " .. item .. " on tile (" .. position[1] .. "," .. position[2] .. ")")
 
   -- Check if we have the item
-  if myplayer.get_item_count(item) == 0 then 
+  if myplayer.get_item_count(item) == 0 then
     errprint("Build failed: No item available")
     return
   end
 
   -- Check if we are in reach of this tile
-  if not inrange(position) then 
+  if not inrange(position) then
     errprint("Build failed: You are trying to place beyond realistic reach")
     return
   end
-  
+
   -- Check if we can actually place the item at this tile
-  local canplace = myplayer.surface.can_place_entity{name = item, position = position, force = "player"}  
-  if not canplace then 
+  local canplace = myplayer.surface.can_place_entity{name = item, position = position, direction = direction, force = "player"}  
+  if not canplace then
     errprint("Build failed: Something is in the way")
     return
   end
-  
+
   -- If no errors, proceed to actually building things
   -- Place the item
   asm = myplayer.surface.create_entity{name = item, position = position, direction = direction, force="player"}
   -- Remove the placed item from the player (since he has now spent it)
   if asm then myplayer.remove_item({name = item, count = 1})
     else errprint("Build failed: Reason unknown.") end
-  
+
 end
 
 TAScommands["put"] = function (tokens)
@@ -133,7 +133,7 @@ TAScommands["put"] = function (tokens)
 end
 
 TAScommands["speed"] = function (tokens)
-  if global.allowspeed then 
+  if global.allowspeed then
     game.speed = tokens[2]
     debugprint("Speed: " .. tokens[2])
   else
@@ -209,7 +209,7 @@ TAScommands["recipe"] = function (tokens)
 	return
   end
   myplayer.selected.recipe = tokens[3]
-  debugprint("Setting recipe: " .. tokens[3] .. " at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.") 
+  debugprint("Setting recipe: " .. tokens[3] .. " at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.")
 end
 
 TAScommands["rotate"] = function (tokens)
@@ -217,11 +217,11 @@ TAScommands["rotate"] = function (tokens)
   local direction = tokens[3]
 
   myplayer.update_selected_entity(position)
-  
+
   if not myplayer.selected then
     errprint ("Rotate failed, no object at position {" .. position[1] .. "," .. position[2] .. "}")
   end
-  
+
   myplayer.selected.direction = directions[direction]
   debugprint("Rotating " .. myplayer.selected.name  .. " so that it faces " .. direction .. ".")
 end
