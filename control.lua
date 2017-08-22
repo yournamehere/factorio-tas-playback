@@ -2,7 +2,6 @@ require("util")
 require("utility_functions")
 
 -- Global variables initialization
-myplayer = nil
 init_on_player_created = false
 global.walkstate = {walking = false}
 global.minestate = nil
@@ -65,12 +64,12 @@ function init_run(player_index)
 	init_player(player_index)
 	-- Prepare the world
 	local player = game.players[player_index]
-	global.myplayer = player --remove after cleaning up on_tick
+	global.myplayer = player
 	player.surface.always_day = true
 	player.game_view_settings.update_entity_selection = false
 	
 	global.start_tick = game.tick
-	debugprint("Stating tick is " .. global.start_tick)
+	debugprint("Starting tick is " .. global.start_tick)
 	
 	global.running = true
 end
@@ -98,16 +97,16 @@ function init_world(player_index) --does what the freeplay scenario usually does
 	myplayer.force.chart(myplayer.surface, {{pos.x - 200, pos.y - 200}, {pos.x + 200, pos.y + 200}})
 end
 
-function end_of_input()
+function end_of_input(player)
 	if commandqueue.settings.end_tick_debug then
-		myplayer.game_view_settings.update_entity_selection = true
+		player.game_view_settings.update_entity_selection = true
 	end
 end
 
 script.on_event(defines.events.on_tick, function(event)
 	if commandqueue and global.running then
 		local tick = game.tick - global.start_tick
-		if not myplayer then myplayer = global.myplayer end
+		local myplayer = global.myplayer
 		if commandqueue[tick] then
 			for k,v in pairs(commandqueue[tick]) do
 				TAScommands[v[1]](v)
@@ -121,7 +120,7 @@ script.on_event(defines.events.on_tick, function(event)
 			myplayer.mining_state = {mining = true, position = global.minestate}
 		end
 		if tick == max_tick then
-			end_of_input()
+			end_of_input(myplayer)
 		end
 	end
 end)
