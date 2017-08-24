@@ -9,8 +9,6 @@ global.allowspeed = nil
 global.start_tick = nil
 global.running = false
 max_tick = nil
-command_count = 0
-tick_count = 0
 
 -- Get the path of the scenario and the name of the run file through a very dirty trick
 for k,v in pairs(remote.interfaces) do
@@ -21,12 +19,12 @@ end
 if tas_name and run_file then
 	commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
 	-- Command queue stats : 
-	-- determine numberof commands, of ticks and last tick, each time the run is loaded.
+	-- determine last tick, each time the run is loaded.
 	for k,v in pairs(commandqueue) do 
-		command_count = command_count+1
 		if type(k) == "number" then
-			tick_count = tick_count + 1
-			max_tick = k
+			if (not max_tick) or (k > max_tick) then -- Makes sure that k is actually bigger than our current max_tick
+				max_tick = k
+			end
 		end
 	end
 else
@@ -44,12 +42,12 @@ function init_run(player_index)
 	debugprint("Initializing the run")
 	-- Examine the command queue for errors. 
 	if not commandqueue then
-		errprint("The command queue is empty ! No point in starting.")
+		errprint("The command queue is empty! No point in starting.")
 		return
 	end
-	debugprint("command queue size is " .. command_count)
-	if tick_count == 0 then
-		errprint("The command queue is empty ! No point in starting.")
+	debugprint("Command queue size is " .. table_size(commandqueue)) --includes settings "field"
+	if not max_tick then -- If max_tick exist we also have at least one command
+		errprint("The command queue is empty! No point in starting.")
 		return
 	end
 	if not commandqueue.settings then
