@@ -12,13 +12,10 @@ end
 -- Get the run instructions every time the game is loaded
 if tas_name and run_file then
 	commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
-	-- Command queue stats : 
-	-- determine last tick, each time the run is loaded.
+	-- determine last tick, each time the run is loaded
 	for k,v in pairs(commandqueue) do 
-		if type(k) == "number" then
-			if k > max_tick then -- Makes sure that k is actually bigger than our current max_tick
-				max_tick = k
-			end
+		if type(k) == "number" and (k > max_tick) then -- Makes sure that k is actually bigger than our current max_tick
+			max_tick = k
 		end
 	end
 else
