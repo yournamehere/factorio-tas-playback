@@ -4,7 +4,7 @@ function roundn(x)
   return x + 0.5 - (x + 0.5) % 1
 end
 
-function inrange(position)
+function inrange(position, myplayer)
   return ((position[1]-myplayer.position.x)^2+(position[2]-myplayer.position.y)^2) < 36
 end
 

@@ -64,7 +64,7 @@ TAScommands["build"] = function (tokens, myplayer)
   end
 
   -- Check if we are in reach of this tile
-  if not inrange(position) then
+  if not inrange(position, myplayer) then
     errprint("Build failed: You are trying to place beyond realistic reach")
     return
   end
@@ -98,7 +98,7 @@ TAScommands["put"] = function (tokens, myplayer)
     return
   end
 
-  if not inrange(position) then
+  if not inrange(position, myplayer) then
     errprint("Put failed: You are trying to reach too far.")
     return
   end
@@ -154,7 +154,7 @@ TAScommands["take"] = function (tokens, myplayer)
   end
 
   -- Check if we are in reach of this tile
-  if not inrange(position) then
+  if not inrange(position, myplayer) then
     errprint("Take failed: You are trying to reach too far.")
     return
   end
