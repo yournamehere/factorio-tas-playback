@@ -57,6 +57,23 @@ function init_run(player_index)
 	player.surface.always_day = true
 	player.game_view_settings.update_entity_selection = false
 	player.game_view_settings.show_entity_info = true
+	-- make all other players unable to interact with the world and have no body (character)
+	-- set up permissions
+	local spectators = game.permissions.create_group("Spectator")
+	for _, input_action in pairs(defines.input_action) do
+		spectators.set_allows_action(input_action, false)
+	end
+	local allowed_actions = {defines.input_action.start_walking, defines.input_action.open_gui, defines.input_action.open_technology_gui, defines.input_action.open_achievements_gui, defines.input_action.open_trains_gui, defines.input_action.open_train_gui, defines.input_action.open_train_station_gui, defines.input_action.open_bonus_gui, defines.input_action.open_production_gui, defines.input_action.open_kills_gui, defines.input_action.open_logistic_gui, defines.input_action.open_equipment, defines.input_action.open_item}
+	for _, input_action in pairs(allowed_actions) do
+		spectators.set_allows_action(input_action, true)
+	end
+	-- make everyone spectator except the runner
+	for i, player in pairs(game.players) do
+		if i ~= player_index then
+			player.character = nil
+			spectators.add_player(player)
+		end
+	end
 	
 	global.start_tick = game.tick
 	debugprint("Starting tick is " .. global.start_tick)
