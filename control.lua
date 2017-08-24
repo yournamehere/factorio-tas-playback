@@ -59,7 +59,7 @@ function init_run(player_index)
 	global.myplayer = player
 	player.surface.always_day = true
 	player.game_view_settings.update_entity_selection = false
-	player.show_entity_info = true
+	player.game_view_settings.show_entity_info = true
 	
 	global.start_tick = game.tick
 	debugprint("Starting tick is " .. global.start_tick)
