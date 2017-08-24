@@ -1,6 +1,9 @@
 require("util")
 require("utility_functions")
 
+-- Global variables initialization
+local max_tick = 0
+
 -- Get the path of the scenario and the name of the run file through a very dirty trick
 for k,v in pairs(remote.interfaces) do
 	tas_name = tas_name or string.match(k,"^TASName_(.+)$")
@@ -11,7 +14,6 @@ if tas_name and run_file then
 	commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
 	-- Command queue stats : 
 	-- determine last tick, each time the run is loaded.
-	local max_tick = 0
 	for k,v in pairs(commandqueue) do 
 		if type(k) == "number" then
 			if k > max_tick then -- Makes sure that k is actually bigger than our current max_tick
@@ -19,7 +21,6 @@ if tas_name and run_file then
 			end
 		end
 	end
-	global.max_tick = max_tick
 else
 	-- Currently throw a standard lua error since the custom error management system we use cannot be used. Nothing's initialized !!! 
 	error("The run's scenario doesn't seem to be running. Please make sure you launched the scenario. ")
@@ -39,7 +40,7 @@ function init_run(player_index)
 		return
 	end
 	debugprint("Command queue size is " .. table_size(commandqueue)) --includes settings "field"
-	if global.max_tick == 0 then
+	if max_tick == 0 then
 		errprint("The command queue is empty! No point in starting.")
 		return
 	end
@@ -110,7 +111,7 @@ script.on_event(defines.events.on_tick, function(event)
 			myplayer.update_selected_entity(global.minestate)
 			myplayer.mining_state = {mining = true, position = global.minestate}
 		end
-		if tick == global.max_tick then
+		if tick == max_tick then
 			end_of_input(myplayer)
 		end
 	end
