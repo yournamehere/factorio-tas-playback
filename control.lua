@@ -63,14 +63,17 @@ function init_run(player_index)
 	for _, input_action in pairs(defines.input_action) do
 		spectators.set_allows_action(input_action, false)
 	end
-	local allowed_actions = {defines.input_action.start_walking, defines.input_action.open_gui, defines.input_action.open_technology_gui, defines.input_action.open_achievements_gui, defines.input_action.open_trains_gui, defines.input_action.open_train_gui, defines.input_action.open_train_station_gui, defines.input_action.open_bonus_gui, defines.input_action.open_production_gui, defines.input_action.open_kills_gui, defines.input_action.open_logistic_gui, defines.input_action.open_equipment, defines.input_action.open_item}
+	local allowed_actions = {defines.input_action.start_walking, defines.input_action.open_gui, defines.input_action.open_technology_gui, defines.input_action.open_achievements_gui, defines.input_action.open_trains_gui, defines.input_action.open_train_gui, defines.input_action.open_train_station_gui, defines.input_action.open_bonus_gui, defines.input_action.open_production_gui, defines.input_action.open_kills_gui, defines.input_action.open_logistic_gui, defines.input_action.open_equipment, defines.input_action.open_item, defines.input_action.write_to_console}
 	for _, input_action in pairs(allowed_actions) do
 		spectators.set_allows_action(input_action, true)
 	end
 	-- make everyone spectator except the runner
-	for i, player in pairs(game.players) do
+	for i, player in pairs(game.connected_players) do
 		if i ~= player_index then
+			local char_entity = player.character
 			player.character = nil
+			char_entity.destroy()
+			player.game_view_settings.show_entity_info = true
 			spectators.add_player(player)
 		end
 	end
@@ -141,12 +144,13 @@ end)
 
 -- Create the interface and command that allow to launch a run
 script.on_init(function()
-	remote.add_interface("TAS_playback", {launch = function() 
-		global.init_on_player_created = true
-	end})
-	commands.add_command("init_run", "Start the speedrun", function(event)
-		init_run(event.player_index)
-	end)
 	-- Global variables initialization
 	global.walkstate = {walking = false}
+end)
+
+remote.add_interface("TAS_playback", {launch = function() 
+	global.init_on_player_created = true
+end})
+commands.add_command("init_run", "Start the speedrun", function(event)
+	if game.players[event.player_index].admin and (not global.running) then init_run(event.player_index) end
 end)

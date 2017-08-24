@@ -10,12 +10,12 @@ end
 
 function debugprint(msg)
 	if settings.global["tas-verbose-logging"].value then 
-		outp = myplayer or game
+		outp = game
 		outp.print("[" .. game.tick .. "] " .. msg)
 	end
 end
 
 function errprint(msg)
-	outp = myplayer or game
+	outp = game
 	outp.print("[" .. game.tick .. "]  ___WARNING___ " .. msg)
 end
