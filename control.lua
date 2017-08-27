@@ -1,6 +1,8 @@
 require("util")
 require("utility_functions")
 
+-- TODO: SOLVE JOINING PLAYERS; SOLVE THE RUNNER LEAVING (or not lol)
+
 -- Global variables initialization
 local max_tick = 0
 
@@ -29,7 +31,7 @@ local TAScommands = require("commands")
 -- Functions that control the run --
 ------------------------------------
 -- This function initializes the run's clock and a few properties
-function init_run(player_index)
+function init_run(myplayer_index)
 	debugprint("Initializing the run")
 	-- Examine the command queue for errors. 
 	if not commandqueue then
@@ -50,9 +52,9 @@ function init_run(player_index)
 	debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
 	-- Initiating the game
 	-- Prepare the player
-	init_player(player_index)
+	init_player(myplayer_index)
 	-- Prepare the world
-	local player = game.players[player_index]
+	local player = game.players[myplayer_index]
 	global.myplayer = player
 	player.surface.always_day = true
 	player.game_view_settings.update_entity_selection = false
@@ -68,12 +70,13 @@ function init_run(player_index)
 		spectators.set_allows_action(input_action, true)
 	end
 	-- make everyone spectator except the runner
-	for i, player in pairs(game.connected_players) do
-		if i ~= player_index then
+	for _, player in pairs(game.connected_players) do
+		if player.index ~= myplayer_index then
 			local char_entity = player.character
 			player.character = nil
 			char_entity.destroy()
 			player.game_view_settings.show_entity_info = true
+			player.game_view_settings.show_controller_gui = false
 			spectators.add_player(player)
 		end
 	end
@@ -101,7 +104,7 @@ function init_player(player_index)
 end
 
 function init_world(player_index) --does what the freeplay scenario usually does
-	myplayer = game.players[player_index]
+	local myplayer = game.players[player_index]
 	-- Reveal the map around the player
 	local pos = myplayer.position
 	myplayer.force.chart(myplayer.surface, {{pos.x - 200, pos.y - 200}, {pos.x + 200, pos.y + 200}})
@@ -151,6 +154,28 @@ end)
 remote.add_interface("TAS_playback", {launch = function() 
 	global.init_on_player_created = true
 end})
+
 commands.add_command("init_run", "Start the speedrun", function(event)
-	if game.players[event.player_index].admin and (not global.running) then init_run(event.player_index) end
+	if not game.players[event.player_index].admin then
+		game.players[event.player_index].print("Only admins can start the run.")
+	elseif global.running then 
+		game.players[event.player_index].print("The run has already been started.")
+	else
+		init_run(event.player_index)
+	end
+end)
+
+commands.add_command("test", "llksdgöln", function(event)
+	game.print(event.player_index)
+	game.print(global.myplayer.index)
+end)
+
+commands.add_command("init_run2", "Start the speedr222un", function(event)
+	if not game.players[2].admin then
+		game.players[2].print("Only admins can start the run.")
+	elseif global.running then 
+		game.players[2].print("The run has already been started.")
+	else
+		init_run(2)
+	end
 end)
