@@ -1,5 +1,6 @@
 require("util")
 require("utility_functions")
+require("silo-script")
 
 -- TODO: SOLVE JOINING PLAYERS; SOLVE THE RUNNER LEAVING (or not lol)
 
@@ -108,6 +109,7 @@ function init_world(player_index) --does what the freeplay scenario usually does
 	-- Reveal the map around the player
 	local pos = myplayer.position
 	myplayer.force.chart(myplayer.surface, {{pos.x - 200, pos.y - 200}, {pos.x + 200, pos.y + 200}})
+	silo_script.gui_init(player)
 end
 
 function end_of_input(player)
@@ -149,6 +151,7 @@ end)
 script.on_init(function()
 	-- Global variables initialization
 	global.walkstate = {walking = false}
+	silo_script.init()
 end)
 
 remote.add_interface("TAS_playback", {launch = function() 
@@ -166,3 +169,14 @@ commands.add_command("init_run", "Start the speedrun", function(event)
 		init_run(event.player_index)
 	end
 end)
+
+--freeplay scenario rocket launch stuff
+script.on_event(defines.events.on_gui_click, function(event)
+  silo_script.on_gui_click(event)
+end)
+
+script.on_event(defines.events.on_rocket_launched, function(event)
+  silo_script.on_rocket_launched(event)
+end)
+
+silo_script.add_remote_interface()
