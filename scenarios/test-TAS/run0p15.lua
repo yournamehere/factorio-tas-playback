@@ -3859,7 +3859,7 @@ commandqueue[33969] = {{"move", "STOP"}}
 --Presently at: (-9.21875000,15.91796875)
 -- Position tracking update here, required because of entity collisions or belt-running.
 -- You are presently at: (-9.2188,12.7305)
---commandqueue[5] = {{"speed", 2}}
+commandqueue[5] = {{"speed", 10}}
 commandqueue[34800] = {{"speed", 1}}
 --commandqueue[33971] = {{"speed", 0.01}}
 -- ----------------------------------------- --

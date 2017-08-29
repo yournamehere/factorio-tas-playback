@@ -23,11 +23,11 @@ To create a run :
  into `factorio/mods/tas_playback_0.0.1/scenarios/YourNewRunName/`
 * Create the file that will contain the instructions for your run into the folder `factorio/mods/tas_playback_0.0.1/scenarios/YourNewRunName/`. 
  You can choose the name you want for this file. For example : `YourRunFile.lua`
-* Open the file configuration.lua in a text editor and edit the run_name and run_file variables to contain the name of your run's scenario and of the file that contains the commands. 
+* Open the file configuration.lua in a text editor and edit the config.run_name and config.run_file variables to contain the name of your run's scenario and of the file that contains the commands. 
 In our case, we will have : 
 ```
-run_name = "YourNewRunName"
-run_file = "YourRunFile"
+config.run_name = "YourNewRunName"
+config.run_file = "YourRunFile"
 ```
 **__ATTENTION__ : These __MUST__ be the __EXACT__ names used as the folder name and the run's file name. Otherwise, the run will not work !**
 * you can now start writing your run's commands into `YourRunFile.lua`. 
@@ -36,8 +36,8 @@ run_file = "YourRunFile"
 To start playing the run : 
 * In factorio menu, navigate to _Play_ -> _Scenarios_
 * A scenario will appear as `tas_playback/YourNewRunName` (YourNewRunName being the name you used when you created the run's scenario, of course). Launch it. 
-* If your run's configuration file contains `autorun = true`, the run will automatically start when loading the scenario. 
-* If your run's configuration file contains `autorun = false`, you can use the chat command `/init_run` to start it at any moment. 
+* If your run's configuration file contains `config.autorun = true`, the run will automatically start when loading the scenario. 
+* If your run's configuration file contains `config.autorun = false`, you can use the chat command `/init_run` to start it at any moment. 
  Your player will be repositionned at the right location and your inventory reset. 
  Any modification that happened to the world since the game was started will, however, be kept. 
 * You can at any point save the run. 

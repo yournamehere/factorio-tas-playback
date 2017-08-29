@@ -9,13 +9,13 @@ function inrange(position, myplayer)
 end
 
 function debugprint(msg)
-	if settings.global["tas-verbose-logging"].value then 
-		outp = game
-		outp.print("[" .. game.tick - global.start_tick .. "] " .. msg)
+	for _, player in pairs(game.connected_players) do
+		if player.mod_settings["tas-verbose-logging"].value then 
+			player.print("[" .. game.tick - (global.start_tick or 0) .. "] " .. msg)
+		end
 	end
 end
 
 function errprint(msg)
-	outp = game
-	outp.print("[" .. game.tick - global.start_tick .. "]  ___WARNING___ " .. msg)
+	game.print("[" .. game.tick - (global.start_tick or 0) .. "]  ___WARNING___ " .. msg)
 end
