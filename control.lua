@@ -2,8 +2,6 @@ require("util")
 require("utility_functions")
 require("silo-script")
 
--- TODO: SOLVE JOINING PLAYERS; SOLVE THE RUNNER LEAVING (or not lol)
-
 -- Global variables initialization
 local max_tick = 0
 
@@ -109,7 +107,7 @@ function init_world(player_index) --does what the freeplay scenario usually does
 	-- Reveal the map around the player
 	local pos = myplayer.position
 	myplayer.force.chart(myplayer.surface, {{pos.x - 200, pos.y - 200}, {pos.x + 200, pos.y + 200}})
-	silo_script.gui_init(player)
+	silo_script.gui_init(myplayer)
 end
 
 function end_of_input(player)
@@ -122,6 +120,9 @@ script.on_event(defines.events.on_tick, function(event)
 	if commandqueue and global.running then
 		local tick = game.tick - global.start_tick
 		local myplayer = global.myplayer
+		if not myplayer.connected then
+			error("The runner left.")
+		end
 		if commandqueue[tick] then
 			for k,v in pairs(commandqueue[tick]) do
 				TAScommands[v[1]](v, myplayer)
@@ -144,6 +145,18 @@ script.on_event(defines.events.on_player_created, function(event)
 	init_world(event.player_index)
 	if global.init_on_player_created and (event.player_index == 1) then -- Only the first player created automatically starts the run
 		init_run(event.player_index)
+	end
+end)
+
+script.on_event(defines.events.on_player_joined_game, function (event)
+	if global.running and (event.player_index ~= global.myplayer.index) then
+		local player = game.players[event.player_index]
+		local char_entity = player.character
+		player.character = nil
+		char_entity.destroy()
+		player.game_view_settings.show_entity_info = true
+		player.game_view_settings.show_controller_gui = false
+		game.permissions.get_group("Spectator").add_player(player)
 	end
 end)
 
