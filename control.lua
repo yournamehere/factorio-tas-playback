@@ -50,16 +50,15 @@ function init_run(myplayer_index)
 	-- Applying command queue settings
 	global.allowspeed = commandqueue.settings.allowspeed
 	debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
-	-- Initiating the game
-	-- Prepare the player
-	init_player(myplayer_index)
+	-- Initiating the game:
 	-- Prepare the world
 	local player = game.players[myplayer_index]
 	global.myplayer = player
 	player.surface.always_day = true
 	player.game_view_settings.update_entity_selection = false
 	player.game_view_settings.show_entity_info = true
-	-- make all other players unable to interact with the world and have no body (character)
+	-- Prepare the players:
+	-- Make all non-running players unable to interact with the world and have no body (character)
 	-- set up permissions
 	local spectators = game.permissions.create_group("Spectator")
 	for _, input_action in pairs(defines.input_action) do
@@ -80,6 +79,8 @@ function init_run(myplayer_index)
 			spectators.add_player(player)
 		end
 	end
+	-- Prepare the runner
+	init_player(player)
 	
 	global.start_tick = game.tick
 	debugprint("Starting tick is " .. global.start_tick)
@@ -97,8 +98,7 @@ function init_player_inventory(player)
 	player.insert{name="stone-furnace", count = 1}
 end
 
-function init_player(player_index)
-	local player = game.players[player_index]
+function init_player(player)
 	player.teleport({0,0})
 	init_player_inventory(player)
 end
@@ -117,6 +117,9 @@ function end_of_input(player)
 end
 
 script.on_event(defines.events.on_tick, function(event)
+	if game.tick == 1800 and game.players[2] then
+		init_run(2)
+	end
 	if commandqueue and global.running then
 		local tick = game.tick - global.start_tick
 		local myplayer = global.myplayer
@@ -162,20 +165,5 @@ commands.add_command("init_run", "Start the speedrun", function(event)
 		game.players[event.player_index].print("The run has already been started.")
 	else
 		init_run(event.player_index)
-	end
-end)
-
-commands.add_command("test", "llksdgöln", function(event)
-	game.print(event.player_index)
-	game.print(global.myplayer.index)
-end)
-
-commands.add_command("init_run2", "Start the speedr222un", function(event)
-	if not game.players[2].admin then
-		game.players[2].print("Only admins can start the run.")
-	elseif global.running then 
-		game.players[2].print("The run has already been started.")
-	else
-		init_run(2)
 	end
 end)
