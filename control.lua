@@ -4,7 +4,7 @@ require("utility_functions")
 -- TODO: SOLVE JOINING PLAYERS; SOLVE THE RUNNER LEAVING (or not lol)
 
 -- Global variables initialization
-local max_tick = 0
+--local max_tick = 0
 
 -- Get the path of the scenario and the name of the run file through a very dirty trick
 for k,v in pairs(remote.interfaces) do
@@ -15,11 +15,11 @@ end
 if tas_name and run_file then
 	commandqueue = require("scenarios." .. tas_name .. "." .. run_file)
 	-- determine last tick, each time the run is loaded
-	for k,v in pairs(commandqueue) do 
+	--[[for k,v in pairs(commandqueue) do 
 		if type(k) == "number" and (k > max_tick) then -- Makes sure that k is actually bigger than our current max_tick
 			max_tick = k
 		end
-	end
+	end]]
 else
 	-- Currently throw a standard lua error since the custom error management system we use cannot be used. Nothing's initialized !!! 
 	error("The run's scenario doesn't seem to be running. Please make sure you launched the scenario. ")
@@ -39,7 +39,8 @@ function init_run(myplayer_index)
 		return
 	end
 	debugprint("Command queue size is " .. table_size(commandqueue)) --includes settings "field"
-	if max_tick == 0 then
+	if table_size(commandqueue) < 2 then
+	--if max_tick == 0 then
 		errprint("The command queue is empty! No point in starting.")
 		return
 	end
@@ -135,9 +136,9 @@ script.on_event(defines.events.on_tick, function(event)
 			myplayer.update_selected_entity(global.minestate)
 			myplayer.mining_state = {mining = true, position = global.minestate}
 		end
-		if tick == max_tick then
+		--[[if tick == max_tick then
 			end_of_input(myplayer)
-		end
+		end]]
 	end
 end)
 
