@@ -63,7 +63,7 @@ function init_run(myplayer_index)
 	for _, input_action in pairs(defines.input_action) do
 		spectators.set_allows_action(input_action, false)
 	end
-	local allowed_actions = {defines.input_action.start_walking, defines.input_action.open_gui, defines.input_action.open_technology_gui, defines.input_action.open_achievements_gui, defines.input_action.open_trains_gui, defines.input_action.open_train_gui, defines.input_action.open_train_station_gui, defines.input_action.open_bonus_gui, defines.input_action.open_production_gui, defines.input_action.open_kills_gui, defines.input_action.open_logistic_gui, defines.input_action.open_equipment, defines.input_action.open_item, defines.input_action.write_to_console}
+	local allowed_actions = {defines.input_action.start_walking, defines.input_action.open_gui, defines.input_action.open_technology_gui, defines.input_action.open_achievements_gui, defines.input_action.open_trains_gui, defines.input_action.open_train_gui, defines.input_action.open_train_station_gui, defines.input_action.open_bonus_gui, defines.input_action.open_production_gui, defines.input_action.open_kills_gui, defines.input_action.open_logistic_gui, defines.input_action.open_equipment, defines.input_action.open_item, defines.input_action.write_to_console, defines.input_action.mod_settings_changed}
 	for _, input_action in pairs(allowed_actions) do
 		spectators.set_allows_action(input_action, true)
 	end
@@ -149,7 +149,7 @@ script.on_event(defines.events.on_player_created, function(event)
 end)
 
 script.on_event(defines.events.on_player_joined_game, function (event)
-	if global.running and (event.player_index ~= global.myplayer.index) then
+	if global.running and (event.player_index ~= global.myplayer.index) and game.players[event.player_index].character then
 		local player = game.players[event.player_index]
 		local char_entity = player.character
 		player.character = nil
@@ -172,24 +172,57 @@ remote.add_interface("TAS_playback", {launch = function()
 end})
 
 commands.add_command("init_run", "Start the speedrun", function(event)
-	if not game.players[event.player_index].admin then
-		game.players[event.player_index].print("Only admins can start the run.")
+	local player = game.players[event.player_index]
+	if not player.admin then
+		player.print("Only admins can start the run.")
 	elseif global.running then 
-		game.players[event.player_index].print("The run has already been started.")
-	elseif event.player_index ~= 1 then
-		game.players[event.player_index].print("Only the host can start the run, otherwise the run will fail. At some point. At a different point each run. Reason: http://i.imgur.com/kQykaQd.png")
+		player.print("The run has already been started.")
+	elseif (event.player_index ~= 1) and (table_size(game.connected_players) > 1) then
+		local warning_frame = player.gui.center.add{
+			type = "frame",
+			name = "tas-warning-frame",
+			direction = "vertical",
+			caption = "Warning"
+		}
+		warning_frame.style.font_color = {r=1, g=0.2, b=0.3}
+		warning_frame.add{
+			type = "label",
+			name = "tas-warning-label",
+			caption = "Only the server host should start the run, otherwise the run can fail."
+		}
+		local warning_table = warning_frame.add{
+			type = "table",
+			name = "tas-warning-table",
+			colspan = 2
+		}
+		warning_table.add{
+			type = "button",
+			name = "tas-cancel-button",
+			caption = "Cancel"
+		}
+		warning_table.add{
+			type = "button",
+			name = "tas-start-button",
+			caption = "Start run"
+		}
 	else
 		init_run(event.player_index)
 	end
 end)
 
---freeplay scenario rocket launch stuff
 script.on_event(defines.events.on_gui_click, function(event)
-  silo_script.on_gui_click(event)
+	silo_script.on_gui_click(event)
+	if event.element.name == "tas-cancel-button" then
+		game.players[event.player_index].gui.center["tas-warning-frame"].destroy()
+	elseif event.element.name == "tas-start-button" then
+		game.players[event.player_index].gui.center["tas-warning-frame"].destroy()
+		init_run(event.player_index)
+	end
 end)
 
+-- Freeplay scenario rocket launch stuff
 script.on_event(defines.events.on_rocket_launched, function(event)
-  silo_script.on_rocket_launched(event)
+	silo_script.on_rocket_launched(event)
 end)
 
 silo_script.add_remote_interface()
