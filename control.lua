@@ -29,8 +29,29 @@ local TAScommands = require("commands")
 ------------------------------------
 -- Functions that control the run --
 ------------------------------------
+
+-- Initialize the player's inventory
+local function init_player_inventory(player)
+	player.clear_items_inside()
+	player.insert{name="iron-plate", count=8}
+	player.insert{name="pistol", count=1}
+	player.insert{name="firearm-magazine", count=10}
+	player.insert{name="burner-mining-drill", count = 1}
+	player.insert{name="stone-furnace", count = 1}
+end
+
+local function init_player(player)
+	local char_entity = player.surface.create_entity({name="player", position={0,0}, force=player.force})
+	player.character = char_entity
+	player.surface.always_day = true
+	player.game_view_settings.update_entity_selection = false
+	player.game_view_settings.show_entity_info = true
+	player.game_view_settings.show_controller_gui = true
+	init_player_inventory(player)
+end
+
 -- This function initializes the run's clock and a few properties
-function init_run(myplayer_index)
+local function init_run(myplayer_index)
 	debugprint("Initializing the run")
 	-- Examine the command queue for errors. 
 	if not commandqueue then
@@ -50,14 +71,13 @@ function init_run(myplayer_index)
 	global.allowspeed = commandqueue.settings.allowspeed
 	debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
 	-- Initiating the game:
-	-- Prepare the world
-	local player = game.players[myplayer_index]
-	global.myplayer = player
-	player.surface.always_day = true
-	player.game_view_settings.update_entity_selection = false
-	player.game_view_settings.show_entity_info = true
 	-- Prepare the players:
-	-- Make all non-running players unable to interact with the world and have no body (character)
+	-- Prepare the runner
+	local player = game.players[myplayer_index]
+	init_player(player)
+	global.myplayer = player
+	
+	-- Make all non-running players unable to interact with the world but still able to open gui's
 	-- set up permissions
 	local spectators = game.permissions.create_group("Spectator")
 	for _, input_action in pairs(defines.input_action) do
@@ -67,19 +87,12 @@ function init_run(myplayer_index)
 	for _, input_action in pairs(allowed_actions) do
 		spectators.set_allows_action(input_action, true)
 	end
-	-- make everyone spectator except the runner
 	for _, player in pairs(game.connected_players) do
 		if player.index ~= myplayer_index then
-			local char_entity = player.character
-			player.character = nil
-			char_entity.destroy()
-			player.game_view_settings.show_entity_info = true
-			player.game_view_settings.show_controller_gui = false
+			player.game_view_settings.update_entity_selection = true
 			spectators.add_player(player)
 		end
 	end
-	-- Prepare the runner
-	init_player(player)
 	
 	global.start_tick = game.tick
 	debugprint("Starting tick is " .. global.start_tick)
@@ -87,30 +100,7 @@ function init_run(myplayer_index)
 	global.running = true
 end
 
--- Initialize the player's inventory
-function init_player_inventory(player)
-	player.clear_items_inside()
-	player.insert{name="iron-plate", count=8}
-	player.insert{name="pistol", count=1}
-	player.insert{name="firearm-magazine", count=10}
-	player.insert{name="burner-mining-drill", count = 1}
-	player.insert{name="stone-furnace", count = 1}
-end
-
-function init_player(player)
-	player.teleport({0,0})
-	init_player_inventory(player)
-end
-
-function init_world(player_index) --does what the freeplay scenario usually does
-	local myplayer = game.players[player_index]
-	-- Reveal the map around the player
-	local pos = myplayer.position
-	myplayer.force.chart(myplayer.surface, {{pos.x - 200, pos.y - 200}, {pos.x + 200, pos.y + 200}})
-	silo_script.gui_init(myplayer)
-end
-
-function end_of_input(player)
+local function end_of_input(player)
 	if commandqueue.settings.end_tick_debug then
 		player.game_view_settings.update_entity_selection = true
 	end
@@ -141,21 +131,35 @@ script.on_event(defines.events.on_tick, function(event)
 	end
 end)
 
+local function init_spectator(player)
+	local char_entity = player.character
+	player.character = nil
+	char_entity.destroy()
+	player.game_view_settings.show_entity_info = true
+	player.game_view_settings.show_controller_gui = false
+	player.game_view_settings.update_entity_selection = false
+end
+
+local function init_world(player_index) --does what the freeplay scenario usually does
+	local myplayer = game.players[player_index]
+	-- Reveal the map around the player
+	local pos = myplayer.position
+	myplayer.force.chart(myplayer.surface, {{pos.x - 200, pos.y - 200}, {pos.x + 200, pos.y + 200}})
+	silo_script.gui_init(myplayer)
+end
+
 script.on_event(defines.events.on_player_created, function(event)
 	init_world(event.player_index)
+	init_spectator(game.players[event.player_index])
 	if global.init_on_player_created and (event.player_index == 1) then -- Only the first player created automatically starts the run
 		init_run(event.player_index)
 	end
 end)
 
 script.on_event(defines.events.on_player_joined_game, function (event)
-	if global.running and (event.player_index ~= global.myplayer.index) and game.players[event.player_index].character then
+	if global.running and (event.player_index ~= global.myplayer.index) then
 		local player = game.players[event.player_index]
-		local char_entity = player.character
-		player.character = nil
-		char_entity.destroy()
-		player.game_view_settings.show_entity_info = true
-		player.game_view_settings.show_controller_gui = false
+		player.game_view_settings.update_entity_selection = true
 		game.permissions.get_group("Spectator").add_player(player)
 	end
 end)
@@ -177,7 +181,7 @@ commands.add_command("init_run", "Start the speedrun", function(event)
 		player.print("Only admins can start the run.")
 	elseif global.running then 
 		player.print("The run has already been started.")
-	elseif (event.player_index ~= 1) and (table_size(game.connected_players) > 1) then
+	elseif (table_size(game.connected_players) > 1) then
 		local warning_frame = player.gui.center.add{
 			type = "frame",
 			name = "tas-warning-frame",
