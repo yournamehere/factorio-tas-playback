@@ -169,6 +169,7 @@ script.on_init(function()
 	-- Global variables initialization
 	global.walkstate = {walking = false}
 	silo_script.init()
+	game.create_surface("tas-surface", {width = 11, height = 11})
 end)
 
 remote.add_interface("TAS_playback", {launch = function() 
@@ -225,8 +226,6 @@ script.on_event(defines.events.on_gui_click, function(event)
 end)
 
 -- Freeplay scenario rocket launch stuff
-script.on_event(defines.events.on_rocket_launched, function(event)
-	silo_script.on_rocket_launched(event)
-end)
+script.on_event(defines.events.on_rocket_launched, silo_script.on_rocket_launched)
 
 silo_script.add_remote_interface()

@@ -208,7 +208,14 @@ TAScommands["recipe"] = function (tokens, myplayer)
 	errprint("Setting recipe: Entity at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "} could not be selected.")
 	return
   end
-  myplayer.selected.recipe = tokens[3]
+  local ent = game.surfaces["tas-surface"].create_entity{name = myplayer.selected.name, position = {0,0}, force="player", recipe=tokens[3]}
+  local items = myplayer.selected.copy_settings(ent)
+  ent.destroy()
+  if items then
+    for name, count in pairs(items) do
+      myplayer.insert{name=name, count=count}
+    end
+  end
   debugprint("Setting recipe: " .. tokens[3] .. " at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "}.")
 end
 
