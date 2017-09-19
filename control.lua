@@ -169,7 +169,6 @@ script.on_init(function()
 	-- Global variables initialization
 	global.walkstate = {walking = false}
 	silo_script.init()
-	game.create_surface("tas-surface", {width = 11, height = 11})
 end)
 
 remote.add_interface("TAS_playback", {launch = function() 
