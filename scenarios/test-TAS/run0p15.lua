@@ -4782,26 +4782,26 @@ commandqueue[39850] = {{"print", "End of programmed route at tick 39840."}}
 commandqueue[39851] = {{"print", "Carried out 4205 actions in 0h:11m:4sec."}}
 commandqueue[39852] = {{"print", "This corresponds to an average APM of 379.9699."}}
 commandqueue[6] = {{"print", "#===================================================#"}}
-commandqueue[7] = {{"print", "#         Welcome to this tool-assisted speedrun of factorio!            #"}}
-commandqueue[8] = {{"print", "# Please lean back, praise the steel-axe and enjoy what it looks  #"}}
-commandqueue[9] = {{"print", "#           like when a game about automation is automated :)          #"}}
-commandqueue[10] = {{"print", "#                                               - Starbrow                                                #"}}
+commandqueue[7] = {{"print", "#         Welcome to this tool-assisted speedrun of factorio!            "}}
+commandqueue[8] = {{"print", "# Please lean back, praise the steel-axe and enjoy what it looks  "}}
+commandqueue[9] = {{"print", "#           like when a game about automation is automated :)          "}}
+commandqueue[10] = {{"print", "#                                               - Starbrow                                                "}}
 commandqueue[11] = {{"print", "#===================================================# "}}
-commandqueue[863] = {{"print", "#=========================================================================#"}}
-commandqueue[864] = {{"print", "#              The actions that the script performs can be read here in this wall of text.                   #"}}
-commandqueue[865] = {{"print", "#  The number in [brackets] is the tick that the action is performed at (60 ticks to a second). #"}}
-commandqueue[866] = {{"print", "#=========================================================================# "}}
+--commandqueue[863] = {{"print", "#=========================================================================#"}}
+--commandqueue[864] = {{"print", "#              The actions that the script performs can be read here in this wall of text.                   #"}}
+--commandqueue[865] = {{"print", "#  The number in [brackets] is the tick that the action is performed at (60 ticks to a second). #"}}
+--commandqueue[866] = {{"print", "#=========================================================================# "}}
 commandqueue[39973] = {{"print", "#=====================================================#"}}
-commandqueue[39974] = {{"print", "# I hope you have enjoyed watching this TAS speedrun of factorio,  #"}}
-commandqueue[39975] = {{"print", "# even though this project is still a work in progress!                           #"}}
+commandqueue[39974] = {{"print", "# I hope you have enjoyed watching this TAS speedrun of factorio,  "}}
+commandqueue[39975] = {{"print", "# even though this project is still a work in progress!                           "}}
 commandqueue[39976] = {{"print", "#=====================================================# "}}
-commandqueue[39977] = {{"print", "# This run was programmed by Starbrow, and compiled on:               #"}}
-commandqueue[39978] = {{"print", "# 29-Aug-2017 22:58:47                                                                             #"}}
+commandqueue[39977] = {{"print", "# This run was programmed by Starbrow, and compiled on:               "}}
+commandqueue[39978] = {{"print", "# 29-Aug-2017 22:58:47                                                                             "}}
 commandqueue[39979] = {{"print", "#=====================================================#  "}}
 commandqueue[39980] = {{"print", "# Shoutout to AntiElitz for inspiring me to do factorio related            #"}}
-commandqueue[39981] = {{"print", "# speed-running, to the TeamSteelaxe discord channel, to                #"}}
-commandqueue[39982] = {{"print", "# szerspliexiust and Hexicube for coding the first scripts,                  #"}}
-commandqueue[39983] = {{"print", "# since much revised by your name here, Alastor and Bilka.               #"}}
+commandqueue[39981] = {{"print", "# speed-running, to the TeamSteelaxe discord channel, to                "}}
+commandqueue[39982] = {{"print", "# szerspliexiust and Hexicube for coding the first scripts,                  "}}
+commandqueue[39983] = {{"print", "# since much revised by your name here, Alastor and Bilka.               "}}
 commandqueue[39984] = {{"print", "#=====================================================#   "}}
 
 return commandqueue
