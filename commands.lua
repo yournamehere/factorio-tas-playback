@@ -23,8 +23,13 @@ TAScommands["move"] = function (tokens, myplayer)
 end
 
 TAScommands["craft"] = function (tokens, myplayer)
-  myplayer.begin_crafting{recipe = tokens[2], count = tokens[3] or 1}
-  debugprint("Crafting: " .. tokens[2] .. " x" .. (tokens[3] or 1))
+  amt = myplayer.begin_crafting{recipe = tokens[2], count = tokens[3] or 1}
+  if amt ~= (tokens[3] or 1) then
+    errprint("Tried to craft with insufficient ingredients!")
+    errprint("You were trying to make " .. (tokens[3] or 1) .. "x" ..tokens[2])
+  else
+    debugprint("Crafting: " .. tokens[2] .. " x" .. (tokens[3] or 1))
+  end
 end
 
 TAScommands["stopcraft"] = function (tokens, myplayer)
@@ -70,7 +75,7 @@ TAScommands["build"] = function (tokens, myplayer)
   end
 
   -- Check if we can actually place the item at this tile
-  local canplace = myplayer.surface.can_place_entity{name = item, position = position, direction = direction, force = "player"}  
+  local canplace = myplayer.surface.can_place_entity{name = item, position = position, direction = direction, force = "player"}
   if not canplace then
     errprint("Build failed: Something is in the way")
     return
@@ -208,7 +213,7 @@ TAScommands["recipe"] = function (tokens, myplayer)
 	errprint("Setting recipe: Entity at position {" .. tokens[2][1] .. "," .. tokens[2][2] .. "} could not be selected.")
 	return
   end
-  local ent = myplayer.surface.create_entity{name = myplayer.selected.name, position = {100000,100000}, force="player", recipe=tokens[3]}
+  local ent = myplayer.surface.create_entity{name = myplayer.selected.name, position = {1000000,100000}, force="player", recipe=tokens[3]}
   local items = myplayer.selected.copy_settings(ent)
   ent.destroy()
   if items then
