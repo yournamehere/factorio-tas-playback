@@ -25,8 +25,13 @@ TAScommands["move"] = function (tokens, myplayer)
 end
 
 TAScommands["craft"] = function (tokens, myplayer)
-  myplayer.begin_crafting{recipe = tokens[2], count = tokens[3] or 1}
-  util.debugprint("Crafting: " .. tokens[2] .. " x" .. (tokens[3] or 1))
+  amt = myplayer.begin_crafting{recipe = tokens[2], count = tokens[3] or 1}
+  if amt ~= (tokens[3] or 1) then
+    util.errprint("Tried to craft with insufficient ingredients!")
+    util.errprint("You were trying to make " .. (tokens[3] or 1) .. "x" ..tokens[2])
+  else
+    util.debugprint("Crafting: " .. tokens[2] .. " x" .. (tokens[3] or 1))
+  end
 end
 
 TAScommands["stopcraft"] = function (tokens, myplayer)
