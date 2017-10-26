@@ -1,14 +1,15 @@
 -- Utility functions
+local util = {}
 
-function roundn(x)
+function util.roundn(x)
   return x + 0.5 - (x + 0.5) % 1
 end
 
-function inrange(position, myplayer)
+function util.inrange(position, myplayer)
   return ((position[1]-myplayer.position.x)^2+(position[2]-myplayer.position.y)^2) < 36
 end
 
-function prettytime()
+function util.prettytime()
   local tick = game.tick - (global.start_tick or 0)
   if settings.global["tas-pretty-time"].value then
     local hours = string.format("%02.f", math.floor(tick / 216000))
@@ -24,14 +25,16 @@ function prettytime()
   return "[" .. tick .. "] "
 end
 
-function debugprint(msg)
+function util.debugprint(msg)
 	for _, player in pairs(game.connected_players) do
 		if player.mod_settings["tas-verbose-logging"].value then 
-			player.print(prettytime() .. msg)
+			player.print(util.prettytime() .. msg)
 		end
 	end
 end
 
-function errprint(msg)
-	game.print(prettytime() .. " ___WARNING___ " .. msg)
+function util.errprint(msg)
+	game.print(util.prettytime() .. " ___WARNING___ " .. msg)
 end
+
+return util

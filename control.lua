@@ -1,5 +1,5 @@
 require("util")
-require("utility_functions")
+local util = require("utility_functions")
 require("silo-script")
 
 -- Global variables initialization
@@ -52,15 +52,15 @@ end
 
 -- This function initializes the run's clock and a few properties
 local function init_run(myplayer_index)
-	debugprint("Initializing the run")
+	util.debugprint("Initializing the run")
 	-- Examine the command queue for errors. 
 	if not commandqueue then
-		errprint("The command queue is empty! No point in starting.")
+		util.errprint("The command queue is empty! No point in starting.")
 		return
 	end
-	debugprint("Command queue size is " .. table_size(commandqueue)) --includes settings "field"
+	util.debugprint("Command queue size is " .. table_size(commandqueue)) --includes settings "field"
 	if max_tick == 0 then
-		errprint("The command queue is empty! No point in starting.")
+		util.errprint("The command queue is empty! No point in starting.")
 		return
 	end
 	if not commandqueue.settings then
@@ -69,7 +69,7 @@ local function init_run(myplayer_index)
 	end
 	-- Applying command queue settings
 	global.allowspeed = commandqueue.settings.allowspeed
-	debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
+	util.debugprint("Changing the speed of the run through commands is " .. ((global.allowspeed and "allowed") or "forbidden") .. ".")
 	-- Initiating the game:
 	-- Prepare the players:
 	-- Prepare the runner
@@ -95,7 +95,7 @@ local function init_run(myplayer_index)
 	end
 	
 	global.start_tick = game.tick
-	debugprint("Starting tick is " .. global.start_tick)
+	util.debugprint("Starting tick is " .. global.start_tick)
 	
 	global.running = true
 end
@@ -165,7 +165,7 @@ script.on_event(defines.events.on_player_joined_game, function (event)
 end)
 
 script.on_event(defines.events.on_research_finished, function (event)
-	debugprint("Researched " .. event.research.name)
+	util.debugprint("Researched " .. event.research.name)
 end)
 
 -- Create the interface and command that allow to launch a run
