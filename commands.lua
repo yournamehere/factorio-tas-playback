@@ -54,37 +54,52 @@ TAScommands["mine"] = function (tokens, myplayer)
 end
 
 TAScommands["build"] = function (tokens, myplayer)
-  local item = tokens[2]
-  local position = tokens[3]
-  local direction = tokens[4]
-  util.debugprint("Building: " .. item .. " on tile (" .. position[1] .. "," .. position[2] .. ")")
+	local item = tokens[2]
+	local position = tokens[3]
+	local direction = tokens[4]
+	util.debugprint("Building: " .. item .. " on tile (" .. position[1] .. "," .. position[2] .. ")")
 
-  -- Check if we have the item
-  if myplayer.get_item_count(item) == 0 then
-    util.errprint("Build failed: No item available")
-    return
-  end
+	-- Check if we have the item
+	if myplayer.get_item_count(item) == 0 then
+		util.errprint("Build failed: No item available")
+		return
+	end
 
-  -- Check if we are in reach of this tile
-  if not util.inrange(position, myplayer) then
-    util.errprint("Build failed: You are trying to place beyond realistic reach")
-    return
-  end
+	-- Check if we are in reach of this tile
+	if not util.inrange(position, myplayer) then
+		util.errprint("Build failed: You are trying to place beyond realistic reach")
+		return
+	end
 
-  -- Check if we can actually place the item at this tile
-  local canplace = myplayer.surface.can_place_entity{name = item, position = position, direction = direction, force = "player"}  
-  if not canplace then
-    util.errprint("Build failed: Something is in the way")
-    return
-  end
+	-- Check if we can actually place the item at this tile
+	local canplace = myplayer.surface.can_place_entity{name = item, position = position, direction = direction, force = "player"}
+	
+	-- Check if we can fast replace
+	local fast_replace_entity = util.can_fast_replace(item, position, myplayer)
+	local rplc = false
+	local return_item
+	if fast_replace_entity then
+		return_item = fast_replace_entity.name
+		rplc = true
+	end
+	
+	if (not canplace) and (not fast_replace_entity) then
+		util.errprint("Build failed: Something that can't be fast replaced is in the way")
+		return
+	end
 
-  -- If no errors, proceed to actually building things
-  -- Place the item
-  asm = myplayer.surface.create_entity{name = item, position = position, direction = direction, force="player"}
-  -- Remove the placed item from the player (since he has now spent it)
-  if asm then myplayer.remove_item({name = item, count = 1})
-    else util.errprint("Build failed: Reason unknown.") end
-
+	-- If no errors, proceed to actually building things
+	-- Place the item
+	local created = myplayer.surface.create_entity{name = item, position = position, direction = direction, force="player", fast_replace = rplc}
+	-- Remove the placed item from the player (since he has now spent it)
+	if created and created.valid then
+		myplayer.remove_item({name = item, count = 1})
+		if return_item then
+			myplayer.insert{name = return_item, count = 1}
+		end
+    else
+		util.errprint("Build failed: Reason unknown.")
+	end
 end
 
 TAScommands["put"] = function (tokens, myplayer)
