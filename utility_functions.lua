@@ -14,8 +14,9 @@ function util.can_fast_replace(name, position, myplayer)
 	local blocking_entity = myplayer.surface.find_entities_filtered{position = position, force=myplayer.force}[1]
 	
 	if blocking_entity and entity_prototypes[blocking_entity.name].fast_replaceable_group == entity_prototypes[name].fast_replaceable_group and name ~= blocking_entity.name then
-		return blocking_entity
+		return true
 	end
+	return false
 end
 
 
