@@ -242,7 +242,7 @@ TAScommands["rotate"] = function (tokens, myplayer)
     util.errprint ("Rotate failed, no object at position {" .. position[1] .. "," .. position[2] .. "}")
   end
 
-  myplayer.selected.direction = directions[direction]
+  myplayer.selected.direction = directions[direction]["direction"]
   util.debugprint("Rotating " .. myplayer.selected.name  .. " so that it faces " .. direction .. ".")
 end
 
